@@ -14,23 +14,26 @@
     />
     <style>
     html,
-  body {
-    width: 100%;
-    max-width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-    overflow-y: auto; /* пусть можно скроллить, если экран маленький */
-  }
-  * {
-    box-sizing: border-box;
-  }
-  img {
-    max-width: 100%;
-    display: block;
-  }
-</style>
+    body {
+      width: 100%;
+      max-width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    img {
+      max-width: 100%;
+      display: block;
+    }
+    #root {
+      width: 100%;
+      height: 100%;
+    }
+    </style>
   </head>
   <body class="bg-slate-100">
     <div id="root"></div>
@@ -42,10 +45,10 @@
 
     <!-- Весь твой код в виде JSX через Babel -->
     <script
-  type="text/babel"
-  data-presets="env,react"
-  data-plugins="proposal-optional-chaining"
->
+      type="text/babel"
+      data-presets="env,react"
+      data-plugins="proposal-optional-chaining"
+    >
       const { useEffect, useMemo, useRef, useState } = React;
 
       // Простые заглушки вместо framer-motion (анимации будут обычные)
@@ -115,77 +118,78 @@
       }
 
       function ensureWorkflow(m) {
-  const w = m.workflow || {};
-  return {
-    prepaymentType: w.prepaymentType || null,            // "urgent" | "prev" | null
-    prepaymentStatus: w.prepaymentStatus || "none",      // "none" | "pending" | "confirmed"
+        const w = m.workflow || {};
+        return {
+          prepaymentType: w.prepaymentType || null,            // "urgent" | "prev" | null
+          prepaymentStatus: w.prepaymentStatus || "none",      // "none" | "pending" | "confirmed"
 
-    cardLink: w.cardLink || "",                          // ссылка на карточку в Google Диске
-    cardLinkSentAt: w.cardLinkSentAt || null,
+          cardLink: w.cardLink || "",                          // ссылка на карточку в Google Диске
+          cardLinkSentAt: w.cardLinkSentAt || null,
 
-    anketaExternalDone: !!w.anketaExternalDone,          // анкета в Google Диске заполнена
-    anketaExternalDoneAt: w.anketaExternalDoneAt || null,
+          anketaExternalDone: !!w.anketaExternalDone,          // анкета в Google Диске заполнена
+          anketaExternalDoneAt: w.anketaExternalDoneAt || null,
 
-    appointmentDate: w.appointmentDate || "",            // дата консультации (строка)
-    appointmentSetAt: w.appointmentSetAt || null,
+          appointmentDate: w.appointmentDate || "",            // дата консультации (строка)
+          appointmentSetAt: w.appointmentSetAt || null,
 
-    analysesList: w.analysesList || "",                  // текст списка анализов от врача
-    analysesListSentAt: w.analysesListSentAt || null,
+          analysesList: w.analysesList || "",                  // текст списка анализов от врача
+          analysesListSentAt: w.analysesListSentAt || null,
 
-    analysesUploaded: !!w.analysesUploaded,              // пациент загрузил анализы
-    analysesUploadedAt: w.analysesUploadedAt || null,
+          analysesUploaded: !!w.analysesUploaded,              // пациент загрузил анализы
+          analysesUploadedAt: w.analysesUploadedAt || null,
 
-    treatmentReady: !!w.treatmentReady,                  // схема лечения готова
-    treatmentReadyAt: w.treatmentReadyAt || null,
-  };
-}
-      
+          treatmentReady: !!w.treatmentReady,                  // схема лечения готова
+          treatmentReadyAt: w.treatmentReadyAt || null,
+        };
+      }
+
       function fmtDT(v) {
         const d = typeof v === "number" ? new Date(v) : new Date(v);
         return d.toLocaleString();
       }
 
       function defaultMember({ name, dob, sex, relation = "я" }) {
-  return {
-    id: uid("m"),
-    relation,
-    name,
-    dob,
-    sex,
-    anketa: null,
-    chats: [
-      {
-        from: "doctor",
-        text: "Здравствуйте! Заполните анкету и загрузите анализы по категориям.",
-        ts: Date.now(),
-      },
-    ],
-    labs: {},
-    consult: { urgent: "none", prev: "none" },
-    workflow: {
-      prepaymentType: null,
-      prepaymentStatus: "none",
+        return {
+          id: uid("m"),
+          relation,
+          name,
+          dob,
+          sex,
+          anketa: null,
+          chats: [
+            {
+              from: "doctor",
+              text: "Здравствуйте! Заполните анкету и загрузите анализы по категориям.",
+              ts: Date.now(),
+            },
+          ],
+          labs: {},
+          consult: { urgent: "none", prev: "none" },
+          workflow: {
+            prepaymentType: null,
+            prepaymentStatus: "none",
 
-      cardLink: "",
-      cardLinkSentAt: null,
+            cardLink: "",
+            cardLinkSentAt: null,
 
-      anketaExternalDone: false,
-      anketaExternalDoneAt: null,
+            anketaExternalDone: false,
+            anketaExternalDoneAt: null,
 
-      appointmentDate: "",
-      appointmentSetAt: null,
+            appointmentDate: "",
+            appointmentSetAt: null,
 
-      analysesList: "",
-      analysesListSentAt: null,
+            analysesList: "",
+            analysesListSentAt: null,
 
-      analysesUploaded: false,
-      analysesUploadedAt: null,
+            analysesUploaded: false,
+            analysesUploadedAt: null,
 
-      treatmentReady: false,
-      treatmentReadyAt: null,
-    },
-  };
-}
+            treatmentReady: false,
+            treatmentReadyAt: null,
+          },
+        };
+      }
+
       function makeDemoPatients() {
         const p1 = {
           id: "p1",
@@ -255,9 +259,42 @@
         return [p1, p2];
       }
 
+      function initialDoctorContent() {
+        return {
+          education:
+            "• Медицинский вуз / педиатрия / терапия\n" +
+            "• Курсы по превентивной медицине и нутрициологии\n" +
+            "• Обучение по работе с семейными кейсами",
+          about:
+            "Работаю без запугивания, с уважением к пациенту. Веду семью как один проект: сон, питание, анализы и привычки.",
+          method:
+            "1. Как подготовиться к первой консультации.\n" +
+            "2. Какие анализы обычно нужны.\n" +
+            "3. Как вести дневник самочувствия.",
+          guidesText: "Сон, Питание, Кишечник, Гормоны, Дети",
+          stories: [
+            {
+              id: "st1",
+              title: "Сон ребёнка",
+              text: "Как семья ушла от ночных пробуждений к стабильному сну.",
+            },
+            {
+              id: "st2",
+              title: "Хроническая усталость",
+              text: "Кейс, где анализы и режим дня вернули энергию.",
+            },
+            {
+              id: "st3",
+              title: "Кишечник",
+              text: "История про вздутие, питание и микробиоту.",
+            },
+          ],
+        };
+      }
+
       function initialState() {
         return {
-         page: "home", // home | onboard | family | member | doctor
+          page: "home", // home | onboard | family | member | doctor
           memberTab: "overview", // overview | anketa | labs | chat | consult
 
           patients: makeDemoPatients(),
@@ -266,16 +303,26 @@
 
           paymentRequests: [],
           notifications: [],
+          doctorContent: initialDoctorContent(),
         };
       }
 
       function loadState() {
-        const raw =
-          typeof window !== "undefined"
-            ? window.localStorage.getItem(STORAGE_KEY)
-            : null;
-        const s = raw ? safeJsonParse(raw) : null;
-        return s || initialState();
+        const base = initialState();
+        if (typeof window === "undefined") return base;
+
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        const parsed = raw ? safeJsonParse(raw) : null;
+        if (!parsed) return base;
+
+        return {
+          ...base,
+          ...parsed,
+          doctorContent: {
+            ...base.doctorContent,
+            ...(parsed.doctorContent || {}),
+          },
+        };
       }
 
       function saveState(s) {
@@ -372,7 +419,7 @@
                       ✕
                     </Btn>
                   </div>
-                  <div className="p-4">{children}</div>
+                  <div className="p-4 max-h-[60vh] overflow-y-auto">{children}</div>
                   {footer ? (
                     <div className="p-4 border-t border-black/10">{footer}</div>
                   ) : null}
@@ -507,9 +554,11 @@
           member?.consult?.prev === "active";
 
         const isDoctorContext =
-  s.page === "member" &&
-  s.doctorActivePatientId &&
-  s.doctorActivePatientId === s.activePatientId;
+          s.page === "member" &&
+          s.doctorActivePatientId &&
+          s.doctorActivePatientId === s.activePatientId;
+
+        const doctorContent = s.doctorContent || initialDoctorContent();
 
         const onBrandTap = () => {
           const t = Date.now();
@@ -534,6 +583,25 @@
         };
 
         const go = (page) => setS((p) => ({ ...p, page }));
+
+        const toggleProfileFromMenu = () => {
+          setS((prev) => {
+            let nextPage;
+            if (prev.page === "home") {
+              nextPage = "family";
+            } else if (
+              prev.page === "family" ||
+              prev.page === "member" ||
+              prev.page === "onboard"
+            ) {
+              nextPage = "home";
+            } else {
+              nextPage = "family";
+            }
+            return { ...prev, page: nextPage };
+          });
+        };
+
         const setTab = (memberTab) => setS((p) => ({ ...p, memberTab }));
 
         const finishOnboard = () => {
@@ -716,139 +784,139 @@
         };
 
         const addPayReq = (type) => {
-  if (!activePatient || !member) return;
+          if (!activePatient || !member) return;
 
-  setS((prev) => {
-    const exists = prev.paymentRequests.find(
-      (r) =>
-        r.patientId === prev.activePatientId &&
-        r.memberId === activePatient.selectedMemberId &&
-        r.type === type &&
-        r.status === "pending"
-    );
-    if (exists) {
-      setToast("Заявка уже отправлена");
-      return prev;
-    }
+          setS((prev) => {
+            const exists = prev.paymentRequests.find(
+              (r) =>
+                r.patientId === prev.activePatientId &&
+                r.memberId === activePatient.selectedMemberId &&
+                r.type === type &&
+                r.status === "pending"
+            );
+            if (exists) {
+              setToast("Заявка уже отправлена");
+              return prev;
+            }
 
-    const req = {
-      id: uid("pay"),
-      patientId: prev.activePatientId,
-      memberId: activePatient.selectedMemberId,
-      type,
-      status: "pending",
-      createdAt: new Date().toISOString(),
-    };
+            const req = {
+              id: uid("pay"),
+              patientId: prev.activePatientId,
+              memberId: activePatient.selectedMemberId,
+              type,
+              status: "pending",
+              createdAt: new Date().toISOString(),
+            };
 
-    const notif = {
-      id: uid("n"),
-      title: "Оплата отмечена",
-      body: `${activePatient.name} (${activePatient.phone}): ${
-        type === "urgent" ? "Срочная" : "Превентивная"
-      } — ${member.name}`,
-      createdAt: new Date().toISOString(),
-      unread: true,
-    };
-
-    const patients = prev.patients.map((p) => {
-      if (p.id !== prev.activePatientId) return p;
-      const members = p.members.map((m) => {
-        if (m.id !== p.selectedMemberId) return m;
-        const consult = { ...(m.consult || {}) };
-        const workflow = ensureWorkflow(m);
-
-        if (type === "urgent") consult.urgent = "pending";
-        else consult.prev = "pending";
-
-        workflow.prepaymentType = type;
-        workflow.prepaymentStatus = "pending";
-
-        return {
-          ...m,
-          consult,
-          workflow,
-          chats: [
-            ...(m.chats || []),
-            {
-              from: "patient",
-              text: `Отметил(а) оплату: ${
+            const notif = {
+              id: uid("n"),
+              title: "Оплата отмечена",
+              body: `${activePatient.name} (${activePatient.phone}): ${
                 type === "urgent" ? "Срочная" : "Превентивная"
-              } ✅`,
-              ts: Date.now(),
-            },
-            {
-              from: "doctor",
-              text: "Ок. Проверю перевод и подтвержу.",
-              ts: Date.now() + 220,
-            },
-          ],
-        };
-      });
-      return { ...p, members };
-    });
+              } — ${member.name}`,
+              createdAt: new Date().toISOString(),
+              unread: true,
+            };
 
-    setToast("Заявка отправлена врачу");
-    return {
-      ...prev,
-      paymentRequests: [req, ...prev.paymentRequests],
-      notifications: [notif, ...prev.notifications],
-      patients,
-    };
-  });
-};
+            const patients = prev.patients.map((p) => {
+              if (p.id !== prev.activePatientId) return p;
+              const members = p.members.map((m) => {
+                if (m.id !== p.selectedMemberId) return m;
+                const consult = { ...(m.consult || {}) };
+                const workflow = ensureWorkflow(m);
+
+                if (type === "urgent") consult.urgent = "pending";
+                else consult.prev = "pending";
+
+                workflow.prepaymentType = type;
+                workflow.prepaymentStatus = "pending";
+
+                return {
+                  ...m,
+                  consult,
+                  workflow,
+                  chats: [
+                    ...(m.chats || []),
+                    {
+                      from: "patient",
+                      text: `Отметил(а) оплату: ${
+                        type === "urgent" ? "Срочная" : "Превентивная"
+                      } ✅`,
+                      ts: Date.now(),
+                    },
+                    {
+                      from: "doctor",
+                      text: "Ок. Проверю перевод и подтвержу.",
+                      ts: Date.now() + 220,
+                    },
+                  ],
+                };
+              });
+              return { ...p, members };
+            });
+
+            setToast("Заявка отправлена врачу");
+            return {
+              ...prev,
+              paymentRequests: [req, ...prev.paymentRequests],
+              notifications: [notif, ...prev.notifications],
+              patients,
+            };
+          });
+        };
 
         const confirmPay = (reqId, ok) => {
-  setS((prev) => {
-    const req = prev.paymentRequests.find((r) => r.id === reqId);
-    if (!req || req.status !== "pending") return prev;
+          setS((prev) => {
+            const req = prev.paymentRequests.find((r) => r.id === reqId);
+            if (!req || req.status !== "pending") return prev;
 
-    const paymentRequests = prev.paymentRequests.map((r) =>
-      r.id === reqId ? { ...r, status: ok ? "confirmed" : "rejected" } : r
-    );
+            const paymentRequests = prev.paymentRequests.map((r) =>
+              r.id === reqId ? { ...r, status: ok ? "confirmed" : "rejected" } : r
+            );
 
-    const patients = prev.patients.map((p) => {
-      if (p.id !== req.patientId) return p;
-      const members = p.members.map((m) => {
-        if (m.id !== req.memberId) return m;
-        const consult = { ...(m.consult || {}) };
-        const workflow = ensureWorkflow(m);
-        const label = req.type === "urgent" ? "Срочная" : "Превентивная";
+            const patients = prev.patients.map((p) => {
+              if (p.id !== req.patientId) return p;
+              const members = p.members.map((m) => {
+                if (m.id !== req.memberId) return m;
+                const consult = { ...(m.consult || {}) };
+                const workflow = ensureWorkflow(m);
+                const label = req.type === "urgent" ? "Срочная" : "Превентивная";
 
-        if (ok) {
-          if (req.type === "urgent") consult.urgent = "active";
-          else consult.prev = "active";
-          workflow.prepaymentStatus = "confirmed";
-          workflow.prepaymentType = req.type;
-        } else {
-          if (req.type === "urgent") consult.urgent = "none";
-          else consult.prev = "none";
-          workflow.prepaymentStatus = "none";
-          workflow.prepaymentType = null;
-        }
+                if (ok) {
+                  if (req.type === "urgent") consult.urgent = "active";
+                  else consult.prev = "active";
+                  workflow.prepaymentStatus = "confirmed";
+                  workflow.prepaymentType = req.type;
+                } else {
+                  if (req.type === "urgent") consult.urgent = "none";
+                  else consult.prev = "none";
+                  workflow.prepaymentStatus = "none";
+                  workflow.prepaymentType = null;
+                }
 
-        return {
-          ...m,
-          consult,
-          workflow,
-          chats: [
-            ...(m.chats || []),
-            {
-              from: "doctor",
-              text: ok
-                ? `Подтвердил(а) оплату: ${label} ✅ Доступ открыт.`
-                : `Оплата не найдена. Заявка отклонена (${label}).`,
-              ts: Date.now(),
-            },
-          ],
+                return {
+                  ...m,
+                  consult,
+                  workflow,
+                  chats: [
+                    ...(m.chats || []),
+                    {
+                      from: "doctor",
+                      text: ok
+                        ? `Подтвердил(а) оплату: ${label} ✅ Доступ открыт.`
+                        : `Оплата не найдена. Заявка отклонена (${label}).`,
+                      ts: Date.now(),
+                    },
+                  ],
+                };
+              });
+              return { ...p, members };
+            });
+
+            setToast(ok ? "Подтверждено" : "Отклонено");
+            return { ...prev, paymentRequests, patients };
+          });
         };
-      });
-      return { ...p, members };
-    });
-
-    setToast(ok ? "Подтверждено" : "Отклонено");
-    return { ...prev, paymentRequests, patients };
-  });
-};
 
         const openCatFiles = (catId) => {
           setOpenCat(catId);
@@ -883,22 +951,22 @@
               const members = p.members.map((m) => {
                 if (m.id !== p.selectedMemberId) return m;
                 const labs = { ...(m.labs || {}) };
-labs[openCat] = labs[openCat] ? [rec, ...labs[openCat]] : [rec];
-const title = LAB_CATS.find((c) => c.id === openCat)?.title || "Анализ";
+                labs[openCat] = labs[openCat] ? [rec, ...labs[openCat]] : [rec];
+                const title = LAB_CATS.find((c) => c.id === openCat)?.title || "Анализ";
 
-const workflow = ensureWorkflow(m);
-workflow.analysesUploaded = true;
-workflow.analysesUploadedAt = new Date().toISOString();
+                const workflow = ensureWorkflow(m);
+                workflow.analysesUploaded = true;
+                workflow.analysesUploadedAt = new Date().toISOString();
 
-return {
-  ...m,
-  labs,
-  workflow,
-  chats: [
-    ...(m.chats || []),
-    { from: "patient", text: `Загрузил(а) анализ: ${title} ✅`, ts: Date.now() },
-  ],
-};
+                return {
+                  ...m,
+                  labs,
+                  workflow,
+                  chats: [
+                    ...(m.chats || []),
+                    { from: "patient", text: `Загрузил(а) анализ: ${title} ✅`, ts: Date.now() },
+                  ],
+                };
               });
               return { ...p, members };
             });
@@ -964,245 +1032,268 @@ return {
         };
 
         const patientMarkExternalAnketaDone = () => {
-  if (!activePatient || !member) return;
+          if (!activePatient || !member) return;
 
-  setS((prev) => {
-    const patients = prev.patients.map((p) => {
-      if (p.id !== prev.activePatientId) return p;
-      const members = p.members.map((m) => {
-        if (m.id !== p.selectedMemberId) return m;
-        const workflow = ensureWorkflow(m);
-        workflow.anketaExternalDone = true;
-        workflow.anketaExternalDoneAt = new Date().toISOString();
+          setS((prev) => {
+            const patients = prev.patients.map((p) => {
+              if (p.id !== prev.activePatientId) return p;
+              const members = p.members.map((m) => {
+                if (m.id !== p.selectedMemberId) return m;
+                const workflow = ensureWorkflow(m);
+                workflow.anketaExternalDone = true;
+                workflow.anketaExternalDoneAt = new Date().toISOString();
 
-        return {
-          ...m,
-          workflow,
-          chats: [
-            ...(m.chats || []),
-            {
-              from: "patient",
-              text: "Я заполнил(а) анкету в Google Диске ✅",
-              ts: Date.now(),
-            },
-          ],
+                return {
+                  ...m,
+                  workflow,
+                  chats: [
+                    ...(m.chats || []),
+                    {
+                      from: "patient",
+                      text: "Я заполнил(а) анкету в Google Диске ✅",
+                      ts: Date.now(),
+                    },
+                  ],
+                };
+              });
+              return { ...p, members };
+            });
+
+            const notif = {
+              id: uid("n"),
+              title: "Анкета заполнена",
+              body: `${activePatient.name} (${activePatient.phone}) • ${member.name}`,
+              createdAt: new Date().toISOString(),
+              unread: true,
+            };
+
+            return { ...prev, patients, notifications: [notif, ...prev.notifications] };
+          });
+
+          setToast("Отметили заполнение анкеты");
         };
-      });
-      return { ...p, members };
-    });
 
-    const notif = {
-      id: uid("n"),
-      title: "Анкета заполнена",
-      body: `${activePatient.name} (${activePatient.phone}) • ${member.name}`,
-      createdAt: new Date().toISOString(),
-      unread: true,
-    };
+        const patientSetAppointmentDate = () => {
+          if (!activePatient || !member) return;
 
-    return { ...prev, patients, notifications: [notif, ...prev.notifications] };
-  });
+          const current = member.workflow?.appointmentDate || "";
+          const val = window.prompt(
+            "Введите дату и время консультации (например: 2025-02-01 14:00)",
+            current
+          );
+          if (!val) return;
 
-  setToast("Отметили заполнение анкеты");
-};
+          setS((prev) => {
+            const patients = prev.patients.map((p) => {
+              if (p.id !== prev.activePatientId) return p;
+              const members = p.members.map((m) => {
+                if (m.id !== p.selectedMemberId) return m;
+                const workflow = ensureWorkflow(m);
+                workflow.appointmentDate = val;
+                workflow.appointmentSetAt = new Date().toISOString();
 
-const patientSetAppointmentDate = () => {
-  if (!activePatient || !member) return;
+                return {
+                  ...m,
+                  workflow,
+                  chats: [
+                    ...(m.chats || []),
+                    {
+                      from: "patient",
+                      text: `Выбрал(а) дату консультации: ${val}`,
+                      ts: Date.now(),
+                    },
+                  ],
+                };
+              });
+              return { ...p, members };
+            });
 
-  const current = member.workflow?.appointmentDate || "";
-  const val = window.prompt(
-    "Введите дату и время консультации (например: 2025-02-01 14:00)",
-    current
-  );
-  if (!val) return;
+            const notif = {
+              id: uid("n"),
+              title: "Выбрана дата консультации",
+              body: `${activePatient.name} (${activePatient.phone}) • ${member.name} • ${val}`,
+              createdAt: new Date().toISOString(),
+              unread: true,
+            };
 
-  setS((prev) => {
-    const patients = prev.patients.map((p) => {
-      if (p.id !== prev.activePatientId) return p;
-      const members = p.members.map((m) => {
-        if (m.id !== p.selectedMemberId) return m;
-        const workflow = ensureWorkflow(m);
-        workflow.appointmentDate = val;
-        workflow.appointmentSetAt = new Date().toISOString();
+            return { ...prev, patients, notifications: [notif, ...prev.notifications] };
+          });
 
-        return {
-          ...m,
-          workflow,
-          chats: [
-            ...(m.chats || []),
-            {
-              from: "patient",
-              text: `Выбрал(а) дату консультации: ${val}`,
-              ts: Date.now(),
-            },
-          ],
+          setToast("Дата консультации сохранена");
         };
-      });
-      return { ...p, members };
-    });
-
-    const notif = {
-      id: uid("n"),
-      title: "Выбрана дата консультации",
-      body: `${activePatient.name} (${activePatient.phone}) • ${member.name} • ${val}`,
-      createdAt: new Date().toISOString(),
-      unread: true,
-    };
-
-    return { ...prev, patients, notifications: [notif, ...prev.notifications] };
-  });
-
-  setToast("Дата консультации сохранена");
-};
 
         const doctorSetCardLink = () => {
-  if (!activePatient || !member) return;
+          if (!activePatient || !member) return;
 
-  const current = member.workflow?.cardLink || "";
-  const url = window.prompt(
-    "Вставьте ссылку на карточку в Google Диске пациента",
-    current
-  );
-  if (!url) return;
+          const current = member.workflow?.cardLink || "";
+          const url = window.prompt(
+            "Вставьте ссылку на карточку в Google Диске пациента",
+            current
+          );
+          if (!url) return;
 
-  setS((prev) => {
-    const patients = prev.patients.map((p) => {
-      if (p.id !== prev.activePatientId) return p;
-      const members = p.members.map((m) => {
-        if (m.id !== p.selectedMemberId) return m;
-        const workflow = ensureWorkflow(m);
-        workflow.cardLink = url;
-        workflow.cardLinkSentAt = new Date().toISOString();
+          setS((prev) => {
+            const patients = prev.patients.map((p) => {
+              if (p.id !== prev.activePatientId) return p;
+              const members = p.members.map((m) => {
+                if (m.id !== p.selectedMemberId) return m;
+                const workflow = ensureWorkflow(m);
+                workflow.cardLink = url;
+                workflow.cardLinkSentAt = new Date().toISOString();
 
-        return {
-          ...m,
-          workflow,
-          chats: [
-            ...(m.chats || []),
-            {
-              from: "doctor",
-              text: "Отправил(а) ссылку на вашу карточку в Google Диске 🔗",
-              ts: Date.now(),
-            },
-          ],
+                return {
+                  ...m,
+                  workflow,
+                  chats: [
+                    ...(m.chats || []),
+                    {
+                      from: "doctor",
+                      text: "Отправил(а) ссылку на вашу карточку в Google Диске 🔗",
+                      ts: Date.now(),
+                    },
+                  ],
+                };
+              });
+              return { ...p, members };
+            });
+
+            const notif = {
+              id: uid("n"),
+              title: "Отправлена ссылка на карточку",
+              body: `${activePatient.name} (${activePatient.phone}) • ${member.name}`,
+              createdAt: new Date().toISOString(),
+              unread: true,
+            };
+
+            return { ...prev, patients, notifications: [notif, ...prev.notifications] };
+          });
+
+          setToast("Ссылка сохранена");
         };
-      });
-      return { ...p, members };
-    });
 
-    const notif = {
-      id: uid("n"),
-      title: "Отправлена ссылка на карточку",
-      body: `${activePatient.name} (${activePatient.phone}) • ${member.name}`,
-      createdAt: new Date().toISOString(),
-      unread: true,
-    };
+        const doctorSendAnalysesList = () => {
+          if (!activePatient || !member) return;
 
-    return { ...prev, patients, notifications: [notif, ...prev.notifications] };
-  });
+          const current = member.workflow?.analysesList || "";
+          const text = window.prompt(
+            "Список анализов для пациента (каждый с новой строки)",
+            current
+          );
+          if (!text || !text.trim()) return;
 
-  setToast("Ссылка сохранена");
-};
+          setS((prev) => {
+            const patients = prev.patients.map((p) => {
+              if (p.id !== prev.activePatientId) return p;
+              const members = p.members.map((m) => {
+                if (m.id !== p.selectedMemberId) return m;
+                const workflow = ensureWorkflow(m);
+                workflow.analysesList = text.trim();
+                workflow.analysesListSentAt = new Date().toISOString();
 
-const doctorSendAnalysesList = () => {
-  if (!activePatient || !member) return;
+                return {
+                  ...m,
+                  workflow,
+                  chats: [
+                    ...(m.chats || []),
+                    {
+                      from: "doctor",
+                      text: `Отправил(а) список анализов:\n${text.trim()}`,
+                      ts: Date.now(),
+                    },
+                  ],
+                };
+              });
+              return { ...p, members };
+            });
 
-  const current = member.workflow?.analysesList || "";
-  const text = window.prompt(
-    "Список анализов для пациента (каждый с новой строки)",
-    current
-  );
-  if (!text || !text.trim()) return;
+            const notif = {
+              id: uid("n"),
+              title: "Отправлен список анализов",
+              body: `${activePatient.name} (${activePatient.phone}) • ${member.name}`,
+              createdAt: new Date().toISOString(),
+              unread: true,
+            };
 
-  setS((prev) => {
-    const patients = prev.patients.map((p) => {
-      if (p.id !== prev.activePatientId) return p;
-      const members = p.members.map((m) => {
-        if (m.id !== p.selectedMemberId) return m;
-        const workflow = ensureWorkflow(m);
-        workflow.analysesList = text.trim();
-        workflow.analysesListSentAt = new Date().toISOString();
+            return { ...prev, patients, notifications: [notif, ...prev.notifications] };
+          });
 
-        return {
-          ...m,
-          workflow,
-          chats: [
-            ...(m.chats || []),
-            {
-              from: "doctor",
-              text: `Отправил(а) список анализов:\n${text.trim()}`,
-              ts: Date.now(),
-            },
-          ],
+          setToast("Список анализов сохранён и отправлен");
         };
-      });
-      return { ...p, members };
-    });
 
-    const notif = {
-      id: uid("n"),
-      title: "Отправлен список анализов",
-      body: `${activePatient.name} (${activePatient.phone}) • ${member.name}`,
-      createdAt: new Date().toISOString(),
-      unread: true,
-    };
+        const doctorMarkTreatmentReady = () => {
+          if (!activePatient || !member) return;
 
-    return { ...prev, patients, notifications: [notif, ...prev.notifications] };
-  });
+          setS((prev) => {
+            const patients = prev.patients.map((p) => {
+              if (p.id !== prev.activePatientId) return p;
+              const members = p.members.map((m) => {
+                if (m.id !== p.selectedMemberId) return m;
+                const workflow = ensureWorkflow(m);
+                workflow.treatmentReady = true;
+                workflow.treatmentReadyAt = new Date().toISOString();
 
-  setToast("Список анализов сохранён и отправлен");
-};
+                return {
+                  ...m,
+                  workflow,
+                  chats: [
+                    ...(m.chats || []),
+                    {
+                      from: "doctor",
+                      text: "Схема лечения заполнена в вашей карточке на Google Диске ✅",
+                      ts: Date.now(),
+                    },
+                  ],
+                };
+              });
+              return { ...p, members };
+            });
 
-const doctorMarkTreatmentReady = () => {
-  if (!activePatient || !member) return;
+            const notif = {
+              id: uid("n"),
+              title: "Схема лечения готова",
+              body: `${activePatient.name} (${activePatient.phone}) • ${member.name}`,
+              createdAt: new Date().toISOString(),
+              unread: true,
+            };
 
-  setS((prev) => {
-    const patients = prev.patients.map((p) => {
-      if (p.id !== prev.activePatientId) return p;
-      const members = p.members.map((m) => {
-        if (m.id !== p.selectedMemberId) return m;
-        const workflow = ensureWorkflow(m);
-        workflow.treatmentReady = true;
-        workflow.treatmentReadyAt = new Date().toISOString();
+            return { ...prev, patients, notifications: [notif, ...prev.notifications] };
+          });
 
-        return {
-          ...m,
-          workflow,
-          chats: [
-            ...(m.chats || []),
-            {
-              from: "doctor",
-              text: "Схема лечения заполнена в вашей карточке на Google Диске ✅",
-              ts: Date.now(),
-            },
-          ],
+          setToast("Отметили, что схема лечения готова");
         };
-      });
-      return { ...p, members };
-    });
 
-    const notif = {
-      id: uid("n"),
-      title: "Схема лечения готова",
-      body: `${activePatient.name} (${activePatient.phone}) • ${member.name}`,
-      createdAt: new Date().toISOString(),
-      unread: true,
-    };
+        const updateDoctorContent = (patch) => {
+          setS((prev) => {
+            const base = prev.doctorContent || initialDoctorContent();
+            return {
+              ...prev,
+              doctorContent: { ...base, ...patch },
+            };
+          });
+        };
 
-    return { ...prev, patients, notifications: [notif, ...prev.notifications] };
-  });
+        const updateDoctorStory = (index, field, value) => {
+          setS((prev) => {
+            const base = prev.doctorContent || initialDoctorContent();
+            const stories = (base.stories || []).map((st, i) =>
+              i === index ? { ...st, [field]: value } : st
+            );
+            return {
+              ...prev,
+              doctorContent: { ...base, stories },
+            };
+          });
+        };
 
-  setToast("Отметили, что схема лечения готова");
-};
-        
         const pageVariants = {
           initial: { opacity: 0, y: 10 },
           animate: { opacity: 1, y: 0 },
           exit: { opacity: 0, y: 10 },
         };
 
-              return (
-  <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100">
-            <div className="w-full max-w-[430px] rounded-[32px] border border-black/10 bg-white overflow-hidden shadow-[0_35px_130px_rgba(15,23,42,0.22)] flex flex-col">
+        return (
+          <div className="w-full h-screen flex justify-center bg-slate-100 overflow-hidden">
+            <div className="w-full max-w-[430px] m-3 h-[calc(100vh-24px)] rounded-[32px] border border-black/10 bg-white overflow-hidden shadow-[0_35px_130px_rgba(15,23,42,0.22)] flex flex-col">
               {/* Topbar */}
               <div className="px-5 pt-5 pb-4 border-b border-black/10 bg-white">
                 <div className="flex items-center justify-between">
@@ -1222,13 +1313,21 @@ const doctorMarkTreatmentReady = () => {
                       </div>
                     </div>
                   </button>
-                  <Btn
-                    variant="soft"
-                    className="text-xs px-3 py-2"
-                    onClick={reset}
-                  >
-                    Сброс
-                  </Btn>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={toggleProfileFromMenu}
+                      className="active:scale-[0.99] transition rounded-2xl border border-black/10 bg-white px-3 py-2 text-xs text-slate-700"
+                    >
+                      ☰
+                    </button>
+                    <Btn
+                      variant="soft"
+                      className="text-xs px-3 py-2"
+                      onClick={reset}
+                    >
+                      Сброс
+                    </Btn>
+                  </div>
                 </div>
 
                 <div className="mt-4 flex items-center justify-between">
@@ -1258,13 +1357,11 @@ const doctorMarkTreatmentReady = () => {
               <div
                 className="flex-1 overflow-y-auto"
                 style={{
-                  paddingBottom:
-                    "calc(92px + env(safe-area-inset-bottom))",
+                  paddingBottom: "calc(92px + env(safe-area-inset-bottom))",
                 }}
               >
                 <AnimatePresence mode="wait">
-
-                                    {s.page === "home" ? (
+                  {s.page === "home" ? (
                     <motion.div
                       key="home"
                       variants={pageVariants}
@@ -1302,9 +1399,12 @@ const doctorMarkTreatmentReady = () => {
                           Мое образование
                         </div>
                         <div className="mt-2 text-sm text-slate-700 space-y-1">
-                          <div>• Медицинский вуз / педиатрия / терапия</div>
-                          <div>• Курсы по превентивной медицине и нутрициологии</div>
-                          <div>• Обучение по работе с семейными кейсами</div>
+                          {doctorContent.education
+                            .split("\n")
+                            .filter((line) => line.trim().length > 0)
+                            .map((line, idx) => (
+                              <div key={idx}>{line}</div>
+                            ))}
                         </div>
                       </Card>
 
@@ -1312,9 +1412,8 @@ const doctorMarkTreatmentReady = () => {
                         <div className="font-semibold text-slate-900">
                           О себе
                         </div>
-                        <div className="mt-2 text-sm text-slate-700">
-                          Здесь можно коротко описать, как вы работаете: без
-                          запугивания, с уважением к пациенту, шаг за шагом.
+                        <div className="mt-2 text-sm text-slate-700 whitespace-pre-wrap">
+                          {doctorContent.about}
                         </div>
                       </Card>
 
@@ -1323,9 +1422,12 @@ const doctorMarkTreatmentReady = () => {
                           Методичка
                         </div>
                         <div className="mt-2 text-sm text-slate-700 space-y-1">
-                          <div>1. Как подготовиться к первой консультации.</div>
-                          <div>2. Какие анализы обычно нужны.</div>
-                          <div>3. Как вести дневник самочувствия.</div>
+                          {doctorContent.method
+                            .split("\n")
+                            .filter((line) => line.trim().length > 0)
+                            .map((line, idx) => (
+                              <div key={idx}>{line}</div>
+                            ))}
                         </div>
                       </Card>
 
@@ -1334,11 +1436,13 @@ const doctorMarkTreatmentReady = () => {
                           Гайды
                         </div>
                         <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                          <Chip>Сон</Chip>
-                          <Chip>Питание</Chip>
-                          <Chip>Кишечник</Chip>
-                          <Chip>Гормоны</Chip>
-                          <Chip>Дети</Chip>
+                          {doctorContent.guidesText
+                            .split(",")
+                            .map((g) => g.trim())
+                            .filter((g) => g.length > 0)
+                            .map((g, idx) => (
+                              <Chip key={idx}>{g}</Chip>
+                            ))}
                         </div>
                       </Card>
 
@@ -1347,27 +1451,16 @@ const doctorMarkTreatmentReady = () => {
                           Истории
                         </div>
                         <div className="flex gap-3 overflow-x-auto pb-1">
-                          {[
-                            {
-                              title: "Сон ребенка",
-                              text: "Как перевели семью с ночных просыпаний на стабильный сон.",
-                            },
-                            {
-                              title: "Хроническая усталость",
-                              text: "Кейс, где анализы и режим дня вернули энергию.",
-                            },
-                            {
-                              title: "Кишечник",
-                              text: "История про вздутие, питание и микробиоту.",
-                            },
-                          ].map((s, i) => (
+                          {(doctorContent.stories || []).map((s, i) => (
                             <div
-                              key={i}
+                              key={s.id || i}
                               className="min-w-[180px] max-w-[200px] rounded-2xl border border-black/10 bg-slate-50 p-3 text-xs text-slate-700"
                             >
-                              <div className="font-semibold text-slate-900 mb-1">
-                                {s.title}
-                              </div>
+                              {s.title ? (
+                                <div className="font-semibold text-slate-900 mb-1">
+                                  {s.title}
+                                </div>
+                              ) : null}
                               <div>{s.text}</div>
                             </div>
                           ))}
@@ -1375,7 +1468,7 @@ const doctorMarkTreatmentReady = () => {
                       </Card>
                     </motion.div>
                   ) : null}
-                  
+
                   {s.page === "onboard" ? (
                     <motion.div
                       key="onboard"
@@ -1385,7 +1478,7 @@ const doctorMarkTreatmentReady = () => {
                       <Card className="p-5">
                         <div className="text-slate-900 font-semibold text-lg">
                           Создать профиль пациента
-                        </div>             
+                        </div>
                         <div className="mt-4 space-y-3">
                           <div>
                             <div className="text-xs text-slate-500">Имя</div>
@@ -1416,7 +1509,6 @@ const doctorMarkTreatmentReady = () => {
                             Создать профиль
                           </Btn>
                         </div>
-
                       </Card>
 
                       <Card className="p-4">
@@ -1543,8 +1635,8 @@ const doctorMarkTreatmentReady = () => {
                       </div>
                     </motion.div>
                   ) : null}
-                  
-                                    {s.page === "member" && activePatient && member ? (
+
+                  {s.page === "member" && activePatient && member ? (
                     <motion.div
                       key="member"
                       variants={pageVariants}
@@ -2114,10 +2206,108 @@ const doctorMarkTreatmentReady = () => {
                             Кабинет врача
                           </div>
                           <div className="text-xs text-slate-600">
-                            Список пациентов → профиль → семья
+                            Конструктор + список пациентов
                           </div>
                         </div>
                       </div>
+
+                      {/* КОНСТРУКТОР ГЛАВНОГО ЭКРАНА */}
+                      <Card className="p-4">
+                        <div className="font-semibold text-slate-900">
+                          Конструктор главного экрана
+                        </div>
+                        <div className="text-xs text-slate-600 mt-1">
+                          Редактируйте блоки «Моё образование», «О себе», «Методичка», «Гайды» и «Истории» — это то, что видит пациент на главном экране.
+                        </div>
+
+                        <div className="mt-4 space-y-3 text-sm">
+                          <div>
+                            <div className="text-[11px] text-slate-500 mb-1">
+                              Мое образование (каждая строка — пункт)
+                            </div>
+                            <textarea
+                              value={doctorContent.education}
+                              onChange={(e) =>
+                                updateDoctorContent({ education: e.target.value })
+                              }
+                              rows={3}
+                              className="w-full rounded-2xl bg-slate-50 border border-black/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
+                            />
+                          </div>
+
+                          <div>
+                            <div className="text-[11px] text-slate-500 mb-1">
+                              О себе
+                            </div>
+                            <textarea
+                              value={doctorContent.about}
+                              onChange={(e) =>
+                                updateDoctorContent({ about: e.target.value })
+                              }
+                              rows={3}
+                              className="w-full rounded-2xl bg-slate-50 border border-black/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
+                            />
+                          </div>
+
+                          <div>
+                            <div className="text-[11px] text-slate-500 mb-1">
+                              Методичка (каждая строка — пункт)
+                            </div>
+                            <textarea
+                              value={doctorContent.method}
+                              onChange={(e) =>
+                                updateDoctorContent({ method: e.target.value })
+                              }
+                              rows={3}
+                              className="w-full rounded-2xl bg-slate-50 border border-black/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
+                            />
+                          </div>
+
+                          <div>
+                            <div className="text-[11px] text-slate-500 mb-1">
+                              Гайды (через запятую)
+                            </div>
+                            <input
+                              value={doctorContent.guidesText}
+                              onChange={(e) =>
+                                updateDoctorContent({ guidesText: e.target.value })
+                              }
+                              className="w-full rounded-2xl bg-slate-50 border border-black/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
+                              placeholder="Сон, Питание, Кишечник…"
+                            />
+                          </div>
+
+                          <div>
+                            <div className="text-[11px] text-slate-500 mb-1">
+                              Истории (до 3 штук)
+                            </div>
+                            {(doctorContent.stories || []).map((story, idx) => (
+                              <div
+                                key={story.id || idx}
+                                className="mt-2 rounded-2xl border border-black/10 bg-slate-50 p-3 space-y-2"
+                              >
+                                <input
+                                  value={story.title}
+                                  onChange={(e) =>
+                                    updateDoctorStory(idx, "title", e.target.value)
+                                  }
+                                  className="w-full rounded-2xl bg-white border border-black/10 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-black/10"
+                                  placeholder={`Заголовок истории ${idx + 1}`}
+                                />
+                                <textarea
+                                  value={story.text}
+                                  onChange={(e) =>
+                                    updateDoctorStory(idx, "text", e.target.value)
+                                  }
+                                  rows={3}
+                                  className="w-full rounded-2xl bg-white border border-black/10 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-black/10"
+                                  placeholder="Коротко опишите кейс…"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </Card>
 
                       <Card className="p-4">
                         <div className="font-semibold text-slate-900">
@@ -2164,7 +2354,7 @@ const doctorMarkTreatmentReady = () => {
                             <div className="font-semibold text-slate-900">
                               Заявки на оплату
                             </div>
-                            </div>              
+                          </div>
                         </div>
 
                         <div className="mt-3 space-y-2">
@@ -2331,13 +2521,12 @@ const doctorMarkTreatmentReady = () => {
                           })}
                         </div>
                       </Card>
-  
                     </motion.div>
                   ) : null}
                 </AnimatePresence>
               </div>
 
-                           {/* Bottom nav */}
+              {/* Bottom nav */}
               <div
                 className="border-t border-black/10 bg-white px-3 py-3"
                 style={{
@@ -2379,148 +2568,149 @@ const doctorMarkTreatmentReady = () => {
                 </div>
               </div>
 
-            {/* Modals */}
-            <Modal
-              open={addOpen}
-              title="Добавить члена семьи"
-              subtitle="Добавление происходит внутри одного профиля пациента"
-              onClose={() => setAddOpen(false)}
-              footer={
-                <Btn variant="solid" className="w-full" onClick={saveAdd}>
-                  Сохранить
-                </Btn>
-              }
-            >
-              <div className="space-y-3 text-sm">
-                <div>
-                  <div className="text-xs text-slate-500">Кто это?</div>
-                  <select
-                    value={mRelation}
-                    onChange={(e) => setMRelation(e.target.value)}
-                    className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/10"
-                  >
-                    <option value="я">Я</option>
-                    <option value="жена">Жена</option>
-                    <option value="муж">Муж</option>
-                    <option value="ребёнок">Ребёнок</option>
-                    <option value="мама">Мама</option>
-                    <option value="папа">Папа</option>
-                    <option value="другое">Другое</option>
-                  </select>
-                </div>
-                <div>
-                  <div className="text-xs text-slate-500">Имя</div>
-                  <input
-                    value={mName}
-                    onChange={(e) => setMName(e.target.value)}
-                    className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/10"
-                    placeholder="Например: Марк"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
+              {/* Modals */}
+              <Modal
+                open={addOpen}
+                title="Добавить члена семьи"
+                subtitle="Добавление происходит внутри одного профиля пациента"
+                onClose={() => setAddOpen(false)}
+                footer={
+                  <Btn variant="solid" className="w-full" onClick={saveAdd}>
+                    Сохранить
+                  </Btn>
+                }
+              >
+                <div className="space-y-3 text-sm">
                   <div>
-                    <div className="text-xs text-slate-500">
-                      Дата рождения
-                    </div>
-                    <input
-                      value={mDob}
-                      onChange={(e) => setMDob(e.target.value)}
-                      type="date"
+                    <div className="text-xs text-slate-500">Кто это?</div>
+                    <select
+                      value={mRelation}
+                      onChange={(e) => setMRelation(e.target.value)}
                       className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/10"
+                    >
+                      <option value="я">Я</option>
+                      <option value="жена">Жена</option>
+                      <option value="муж">Муж</option>
+                      <option value="ребёнок">Ребёнок</option>
+                      <option value="мама">Мама</option>
+                      <option value="папа">Папа</option>
+                      <option value="другое">Другое</option>
+                    </select>
+                  </div>
+                  <div>
+                    <div className="text-xs text-slate-500">Имя</div>
+                    <input
+                      value={mName}
+                      onChange={(e) => setMName(e.target.value)}
+                      className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/10"
+                      placeholder="Например: Марк"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <div className="text-xs text-slate-500">
+                        Дата рождения
+                      </div>
+                      <input
+                        value={mDob}
+                        onChange={(e) => setMDob(e.target.value)}
+                        type="date"
+                        className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/10"
+                      />
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-500">Пол</div>
+                      <select
+                        value={mSex}
+                        onChange={(e) => setMSex(e.target.value)}
+                        className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/10"
+                      >
+                        <option value="f">Ж</option>
+                        <option value="m">М</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </Modal>
+
+              <Modal
+                open={anketaOpen}
+                title="Анкета (мини)"
+                subtitle={member ? `Тип: ${formTypeFor(member.dob)}` : ""}
+                onClose={() => setAnketaOpen(false)}
+                footer={
+                  <Btn variant="solid" className="w-full" onClick={saveAnketa}>
+                    Сохранить
+                  </Btn>
+                }
+              >
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <div className="text-xs text-slate-500">Цель</div>
+                    <textarea
+                      value={aGoal}
+                      onChange={(e) => setAGoal(e.target.value)}
+                      rows={3}
+                      className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/10"
+                      placeholder="Например: улучшить сон, убрать вздутие…"
                     />
                   </div>
                   <div>
-                    <div className="text-xs text-slate-500">Пол</div>
-                    <select
-                      value={mSex}
-                      onChange={(e) => setMSex(e.target.value)}
+                    <div className="text-xs text-slate-500">Жалобы</div>
+                    <textarea
+                      value={aComp}
+                      onChange={(e) => setAComp(e.target.value)}
+                      rows={3}
                       className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/10"
-                    >
-                      <option value="f">Ж</option>
-                      <option value="m">М</option>
-                    </select>
+                      placeholder="Например: усталость, высыпания…"
+                    />
                   </div>
                 </div>
-              </div>
-            </Modal>
+              </Modal>
 
-            <Modal
-              open={anketaOpen}
-              title="Анкета (мини)"
-              subtitle={member ? `Тип: ${formTypeFor(member.dob)}` : ""}
-              onClose={() => setAnketaOpen(false)}
-              footer={
-                <Btn variant="solid" className="w-full" onClick={saveAnketa}>
-                  Сохранить
-                </Btn>
-              }
-            >
-              <div className="space-y-3 text-sm">
-                <div>
-                  <div className="text-xs text-slate-500">Цель</div>
-                  <textarea
-                    value={aGoal}
-                    onChange={(e) => setAGoal(e.target.value)}
-                    rows={3}
-                    className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/10"
-                    placeholder="Например: улучшить сон, убрать вздутие…"
+              <Modal
+                open={doctorOpen}
+                title="Вход врача"
+                subtitle="Введите PIN"
+                onClose={() => setDoctorOpen(false)}
+                footer={
+                  <Btn variant="solid" className="w-full" onClick={enterDoctor}>
+                    ОК
+                  </Btn>
+                }
+              >
+                <div className="space-y-3">
+                  <input
+                    value={pin}
+                    onChange={(e) => {
+                      setPin(e.target.value);
+                      setPinErr(false);
+                    }}
+                    type="password"
+                    inputMode="numeric"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        enterDoctor();
+                      }
+                    }}
+                    className="w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/10"
+                    placeholder="PIN"
                   />
+                  {pinErr ? (
+                    <div className="text-xs text-red-600">
+                      Неверный PIN
+                    </div>
+                  ) : null}
                 </div>
-                <div>
-                  <div className="text-xs text-slate-500">Жалобы</div>
-                  <textarea
-                    value={aComp}
-                    onChange={(e) => setAComp(e.target.value)}
-                    rows={3}
-                    className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/10"
-                    placeholder="Например: усталость, высыпания…"
-                  />
-                </div>
-              </div>
-            </Modal>
+              </Modal>
 
-                        <Modal
-              open={doctorOpen}
-              title="Вход врача"
-              subtitle="Введите PIN"
-              onClose={() => setDoctorOpen(false)}
-              footer={
-                <Btn variant="solid" className="w-full" onClick={enterDoctor}>
-                  ОК
-                </Btn>
-              }
-            >
-              <div className="space-y-3">
-                <input
-                  value={pin}
-                  onChange={(e) => {
-                    setPin(e.target.value);
-                    setPinErr(false);
-                  }}
-                  type="password"
-                  inputMode="numeric"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      enterDoctor();
-                    }
-                  }}
-                  className="w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black/10"
-                  placeholder="PIN"
-                />
-                {pinErr ? (
-                  <div className="text-xs text-red-600">
-                    Неверный PIN
-                  </div>
-                ) : null}
-              </div>
-            </Modal>
-
-            <Toast msg={toast} />
+              <Toast msg={toast} />
+            </div>
           </div>
         );
       }
 
-            function DoctorMemberTools({
+      function DoctorMemberTools({
         member,
         onSetCardLink,
         onSendAnalyses,
@@ -2585,7 +2775,7 @@ const doctorMarkTreatmentReady = () => {
           </div>
         );
       }
-      
+
       function ChatInput({ onSend }) {
         const [text, setText] = useState("");
         return (
