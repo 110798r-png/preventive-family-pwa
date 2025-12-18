@@ -637,7 +637,7 @@ const [dpS3Text, setDpS3Text] = useState("");
         useEffect(() => {
           if (!toast) return;
           const t = setTimeout(() => setToast(""), 1700);
-          return () => clearTimeout(t);
+          return (test) => clearTimeout(t);
         }, [toast]);
 
         const activePatient = useMemo(
