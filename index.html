@@ -58,20 +58,49 @@
       const AnimatePresence = ({ children }) => <>{children}</>;
 
       const STORAGE_KEY = "prev_family_pwa_light_v2";
-      const DOCTOR_PIN = "2580";
+const DOCTOR_PIN = "2580";
 
-      const LAB_CATS = [
-        { id: "cbc", title: "ОАК", icon: "🩸" },
-        { id: "uac", title: "ОАМ", icon: "🧴" },
-        { id: "copro", title: "Копрограмма", icon: "🧫" },
-        { id: "biochem", title: "Биохимия", icon: "⚗️" },
-        { id: "thyroid", title: "Щитовидка", icon: "🦋" },
-        { id: "vit", title: "Витамины/Мин.", icon: "🧩" },
-        { id: "iron", title: "Железо", icon: "🧲" },
-        { id: "inf", title: "CMV/EBV", icon: "🦠" },
-        { id: "us", title: "УЗИ", icon: "📟" },
-        { id: "other", title: "Прочее", icon: "📎" },
-      ];
+const LAB_CATS = [
+  { id: "cbc", title: "ОАК", icon: "🩸" },
+  { id: "uac", title: "ОАМ", icon: "🧴" },
+  { id: "copro", title: "Копрограмма", icon: "🧫" },
+  { id: "biochem", title: "Биохимия", icon: "⚗️" },
+  { id: "thyroid", title: "Щитовидка", icon: "🦋" },
+  { id: "vit", title: "Витамины/Мин.", icon: "🧩" },
+  { id: "iron", title: "Железо", icon: "🧲" },
+  { id: "inf", title: "CMV/EBV", icon: "🦠" },
+  { id: "us", title: "УЗИ", icon: "📟" },
+  { id: "other", title: "Прочее", icon: "📎" },
+];
+
+function defaultDoctorProfile() {
+  return {
+    name: "Имя Фамилия",
+    title: "Врач превентивной медицины",
+    subtitle:
+      "Работаю с семьями: сон, питание, анализы и образ жизни в одной системе.",
+    educationText:
+      "• Медицинский вуз / педиатрия / терапия\n" +
+      "• Курсы по превентивной медицине и нутрициологии\n" +
+      "• Обучение по работе с семейными кейсами",
+    aboutText:
+      "Здесь вы можете рассказать, как вы работаете: без запугивания, с уважением к пациенту, шаг за шагом.",
+    methodText:
+      "1. Как подготовиться к первой консультации.\n" +
+      "2. Какие анализы обычно нужны.\n" +
+      "3. Как вести дневник самочувствия.",
+    guidesText: "Сон, Питание, Кишечник, Гормоны, Дети",
+    story1Title: "Сон ребенка",
+    story1Text:
+      "Как перевели семью с ночных просыпаний на стабильный сон.",
+    story2Title: "Хроническая усталость",
+    story2Text:
+      "Кейс, где анализы и режим дня вернули энергию.",
+    story3Title: "Кишечник",
+    story3Text:
+      "История про вздутие, питание и микробиоту.",
+  };
+}
 
       function uid(prefix = "id") {
         return `${prefix}_${Math.random().toString(16).slice(2)}_${Math.random()
@@ -259,71 +288,34 @@
         return [p1, p2];
       }
 
-      function initialDoctorContent() {
-        return {
-          education:
-            "• Медицинский вуз / педиатрия / терапия\n" +
-            "• Курсы по превентивной медицине и нутрициологии\n" +
-            "• Обучение по работе с семейными кейсами",
-          about:
-            "Работаю без запугивания, с уважением к пациенту. Веду семью как один проект: сон, питание, анализы и привычки.",
-          method:
-            "1. Как подготовиться к первой консультации.\n" +
-            "2. Какие анализы обычно нужны.\n" +
-            "3. Как вести дневник самочувствия.",
-          guidesText: "Сон, Питание, Кишечник, Гормоны, Дети",
-          stories: [
-            {
-              id: "st1",
-              title: "Сон ребёнка",
-              text: "Как семья ушла от ночных пробуждений к стабильному сну.",
-            },
-            {
-              id: "st2",
-              title: "Хроническая усталость",
-              text: "Кейс, где анализы и режим дня вернули энергию.",
-            },
-            {
-              id: "st3",
-              title: "Кишечник",
-              text: "История про вздутие, питание и микробиоту.",
-            },
-          ],
-        };
-      }
-
       function initialState() {
-        return {
-          page: "home", // home | onboard | family | member | doctor
-          memberTab: "overview", // overview | anketa | labs | chat | consult
-
-          patients: makeDemoPatients(),
-          activePatientId: "p1",
-          doctorActivePatientId: "p1",
-
-          paymentRequests: [],
-          notifications: [],
-          doctorContent: initialDoctorContent(),
-        };
-      }
+  return {
+   page: "home", // home | onboard | family | member | doctor
+    memberTab: "overview",
+    patients: makeDemoPatients(),
+    activePatientId: "p1",
+    doctorActivePatientId: "p1",
+    paymentRequests: [],
+    notifications: [],
+    doctorProfile: defaultDoctorProfile(),
+  };
+}
 
       function loadState() {
-        const base = initialState();
-        if (typeof window === "undefined") return base;
+  const raw =
+    typeof window !== "undefined"
+      ? window.localStorage.getItem(STORAGE_KEY)
+      : null;
+  const saved = raw ? safeJsonParse(raw) : null;
+  const base = initialState();
+  if (!saved) return base;
 
-        const raw = window.localStorage.getItem(STORAGE_KEY);
-        const parsed = raw ? safeJsonParse(raw) : null;
-        if (!parsed) return base;
-
-        return {
-          ...base,
-          ...parsed,
-          doctorContent: {
-            ...base.doctorContent,
-            ...(parsed.doctorContent || {}),
-          },
-        };
-      }
+  return {
+    ...base,
+    ...saved,
+    doctorProfile: saved.doctorProfile || base.doctorProfile,
+  };
+}
 
       function saveState(s) {
         try {
@@ -492,6 +484,23 @@
         const [anketaOpen, setAnketaOpen] = useState(false);
         const [doctorOpen, setDoctorOpen] = useState(false);
 
+        const [menuOpen, setMenuOpen] = useState(false);
+
+const [editProfileOpen, setEditProfileOpen] = useState(false);
+const [dpName, setDpName] = useState("");
+const [dpTitle, setDpTitle] = useState("");
+const [dpSubtitle, setDpSubtitle] = useState("");
+const [dpEdu, setDpEdu] = useState("");
+const [dpAbout, setDpAbout] = useState("");
+const [dpMethod, setDpMethod] = useState("");
+const [dpGuides, setDpGuides] = useState("");
+const [dpS1Title, setDpS1Title] = useState("");
+const [dpS1Text, setDpS1Text] = useState("");
+const [dpS2Title, setDpS2Title] = useState("");
+const [dpS2Text, setDpS2Text] = useState("");
+const [dpS3Title, setDpS3Title] = useState("");
+const [dpS3Text, setDpS3Text] = useState("");
+
         const [oName, setOName] = useState("");
         const [oPhone, setOPhone] = useState("");
 
@@ -558,8 +567,6 @@
           s.doctorActivePatientId &&
           s.doctorActivePatientId === s.activePatientId;
 
-        const doctorContent = s.doctorContent || initialDoctorContent();
-
         const onBrandTap = () => {
           const t = Date.now();
           taps.current = taps.current.filter((x) => t - x < 900);
@@ -573,14 +580,64 @@
         };
 
         const reset = () => {
-          try {
-            window.localStorage.removeItem(STORAGE_KEY);
-          } catch {
-            // ignore
-          }
-          setS(initialState());
-          setToast("Сброшено");
-        };
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+  setS(initialState());
+  setToast("Сброшено");
+  setAddOpen(false);
+  setAnketaOpen(false);
+  setDoctorOpen(false);
+  setMenuOpen(false);
+  setEditProfileOpen(false);
+  setOpenCat(null);
+  setPin("");
+  setPinErr(false);
+};
+
+        const openEditProfile = () => {
+  const d = s.doctorProfile || defaultDoctorProfile();
+  setDpName(d.name || "");
+  setDpTitle(d.title || "");
+  setDpSubtitle(d.subtitle || "");
+  setDpEdu(d.educationText || "");
+  setDpAbout(d.aboutText || "");
+  setDpMethod(d.methodText || "");
+  setDpGuides(d.guidesText || "");
+  setDpS1Title(d.story1Title || "");
+  setDpS1Text(d.story1Text || "");
+  setDpS2Title(d.story2Title || "");
+  setDpS2Text(d.story2Text || "");
+  setDpS3Title(d.story3Title || "");
+  setDpS3Text(d.story3Text || "");
+  setEditProfileOpen(true);
+};
+
+const saveEditProfile = () => {
+  setS((prev) => ({
+    ...prev,
+    doctorProfile: {
+      ...(prev.doctorProfile || defaultDoctorProfile()),
+      name: dpName.trim() || "Имя Фамилия",
+      title: dpTitle.trim() || "Врач превентивной медицины",
+      subtitle: dpSubtitle.trim(),
+      educationText: dpEdu,
+      aboutText: dpAbout,
+      methodText: dpMethod,
+      guidesText: dpGuides,
+      story1Title: dpS1Title,
+      story1Text: dpS1Text,
+      story2Title: dpS2Title,
+      story2Text: dpS2Text,
+      story3Title: dpS3Title,
+      story3Text: dpS3Text,
+    },
+  }));
+  setEditProfileOpen(false);
+  setToast("Главный экран обновлён");
+};
 
         const go = (page) => setS((p) => ({ ...p, page }));
 
@@ -1262,29 +1319,6 @@
           setToast("Отметили, что схема лечения готова");
         };
 
-        const updateDoctorContent = (patch) => {
-          setS((prev) => {
-            const base = prev.doctorContent || initialDoctorContent();
-            return {
-              ...prev,
-              doctorContent: { ...base, ...patch },
-            };
-          });
-        };
-
-        const updateDoctorStory = (index, field, value) => {
-          setS((prev) => {
-            const base = prev.doctorContent || initialDoctorContent();
-            const stories = (base.stories || []).map((st, i) =>
-              i === index ? { ...st, [field]: value } : st
-            );
-            return {
-              ...prev,
-              doctorContent: { ...base, stories },
-            };
-          });
-        };
-
         const pageVariants = {
           initial: { opacity: 0, y: 10 },
           animate: { opacity: 1, y: 0 },
@@ -1292,66 +1326,60 @@
         };
 
         return (
-          <div className="w-full h-screen flex justify-center bg-slate-100 overflow-hidden">
+          <div className="min-h-screen flex justify-center items-stretch sm:items-center bg-slate-100 p-0 sm:p-4">
             <div className="w-full max-w-[430px] m-3 h-[calc(100vh-24px)] rounded-[32px] border border-black/10 bg-white overflow-hidden shadow-[0_35px_130px_rgba(15,23,42,0.22)] flex flex-col">
               {/* Topbar */}
-              <div className="px-5 pt-5 pb-4 border-b border-black/10 bg-white">
-                <div className="flex items-center justify-between">
-                  <button
-                    onClick={onBrandTap}
-                    className="active:scale-[0.99] transition flex items-center gap-3 text-left"
-                  >
-                    <div className="w-11 h-11 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-xl">
-                      🧬
-                    </div>
-                    <div>
-                      <div className="font-semibold tracking-wide leading-tight text-slate-900">
-                        PREVENTIVE
-                      </div>
-                      <div className="text-xs text-slate-500 -mt-0.5">
-                        Светлая тема • предпросмотр
-                      </div>
-                    </div>
-                  </button>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={toggleProfileFromMenu}
-                      className="active:scale-[0.99] transition rounded-2xl border border-black/10 bg-white px-3 py-2 text-xs text-slate-700"
-                    >
-                      ☰
-                    </button>
-                    <Btn
-                      variant="soft"
-                      className="text-xs px-3 py-2"
-                      onClick={reset}
-                    >
-                      Сброс
-                    </Btn>
-                  </div>
-                </div>
+<div className="px-5 pt-5 pb-4 border-b border-black/10 bg-white">
+  <div className="flex items-center justify-between">
+    <button
+      onClick={onBrandTap}
+      className="active:scale-[0.99] transition flex items-center gap-3 text-left"
+    >
+      <div className="w-11 h-11 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-xl">
+        🧬
+      </div>
+      <div>
+        <div className="font-semibold tracking-wide leading-tight text-slate-900">
+          PREVENTIVE
+        </div>
+        <div className="text-xs text-slate-500 -mt-0.5">
+          Светлая тема • предпросмотр
+        </div>
+      </div>
+    </button>
+    <div className="flex items-center gap-2">
+      <button
+        onClick={markNotifRead}
+        className={
+          "px-3 py-2 rounded-2xl border text-xs " +
+          (unread ? "bg-slate-50 " : "bg-white ") +
+          "border-black/10 text-slate-700"
+        }
+      >
+        🔔 <b className="ml-1">{unread}</b>
+      </button>
+      <Btn
+        variant="soft"
+        className="text-xs px-3 py-2"
+        onClick={() => setMenuOpen(true)}
+      >
+        ☰
+      </Btn>
+    </div>
+  </div>
 
-                <div className="mt-4 flex items-center justify-between">
-                  <div>
-                    <div className="text-sm text-slate-500">Пациент</div>
-                    <div className="font-semibold text-slate-900">
-                      {activePatient?.name || "—"}
-                    </div>
-                    <div className="text-xs text-slate-500">
-                      {activePatient?.phone || ""}
-                    </div>
-                  </div>
-                  <button
-                    onClick={markNotifRead}
-                    className={
-                      "px-3 py-2 rounded-2xl border text-xs " +
-                      (unread ? "bg-slate-50 " : "bg-white ") +
-                      "border-black/10 text-slate-700"
-                    }
-                  >
-                    🔔 <b className="ml-1">{unread}</b>
-                  </button>
-                </div>
-              </div>
+  <div className="mt-4">
+    <div className="text-xs text-slate-500 mb-1">
+      {s.page === "home" ? "Главный экран врача" : "Личный кабинет"}
+    </div>
+    <div className="font-semibold text-slate-900 text-sm">
+      {activePatient?.name || "Пациент не выбран"}
+    </div>
+    <div className="text-xs text-slate-500">
+      {activePatient?.phone || ""}
+    </div>
+  </div>
+
 
               {/* Pages */}
               <div
@@ -1362,112 +1390,121 @@
               >
                 <AnimatePresence mode="wait">
                   {s.page === "home" ? (
-                    <motion.div
-                      key="home"
-                      variants={pageVariants}
-                      className="p-5 space-y-4"
-                    >
-                      <Card className="p-5">
-                        <div className="flex items-start gap-4">
-                          <div className="w-14 h-14 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-2xl">
-                            🩺
-                          </div>
-                          <div className="flex-1">
-                            <div className="text-xs uppercase tracking-wide text-slate-500">
-                              Врач превентивной медицины
-                            </div>
-                            <div className="text-lg font-semibold text-slate-900 mt-1">
-                              Имя Фамилия
-                            </div>
-                            <div className="text-sm text-slate-600 mt-1">
-                              Работаю с семьями: сон, питание, анализы и образ жизни
-                              в одной системе.
-                            </div>
-                            <Btn
-                              variant="solid"
-                              className="mt-4 text-sm w-full"
-                              onClick={() => go("family")}
-                            >
-                              Мой профиль
-                            </Btn>
-                          </div>
-                        </div>
-                      </Card>
+  <motion.div
+    key="home"
+    variants={pageVariants}
+    className="p-5 space-y-4"
+  >
+    <Card className="p-5">
+      <div className="flex items-start gap-4">
+        <div className="w-14 h-14 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-2xl">
+          🩺
+        </div>
+        <div className="flex-1">
+          <div className="text-xs uppercase tracking-wide text-slate-500">
+            {s.doctorProfile.title}
+          </div>
+          <div className="text-lg font-semibold text-slate-900 mt-1">
+            {s.doctorProfile.name}
+          </div>
+          {s.doctorProfile.subtitle && (
+            <div className="text-sm text-slate-600 mt-1">
+              {s.doctorProfile.subtitle}
+            </div>
+          )}
+          <Btn
+            variant="solid"
+            className="mt-4 text-sm w-full"
+            onClick={() => go("family")}
+          >
+            👤 Мой профиль
+          </Btn>
+        </div>
+      </div>
+    </Card>
 
-                      <Card className="p-4">
-                        <div className="font-semibold text-slate-900">
-                          Мое образование
-                        </div>
-                        <div className="mt-2 text-sm text-slate-700 space-y-1">
-                          {doctorContent.education
-                            .split("\n")
-                            .filter((line) => line.trim().length > 0)
-                            .map((line, idx) => (
-                              <div key={idx}>{line}</div>
-                            ))}
-                        </div>
-                      </Card>
+    <Card className="p-4">
+      <div className="font-semibold text-slate-900">Моё образование</div>
+      <div className="mt-2 text-sm text-slate-700 space-y-1">
+        {s.doctorProfile.educationText
+          ?.split("\n")
+          .filter((line) => line.trim().length > 0)
+          .map((line, i) => (
+            <div key={i}>{line}</div>
+          ))}
+      </div>
+    </Card>
 
-                      <Card className="p-4">
-                        <div className="font-semibold text-slate-900">
-                          О себе
-                        </div>
-                        <div className="mt-2 text-sm text-slate-700 whitespace-pre-wrap">
-                          {doctorContent.about}
-                        </div>
-                      </Card>
+    <Card className="p-4">
+      <div className="font-semibold text-slate-900">О себе</div>
+      {s.doctorProfile.aboutText && (
+        <div className="mt-2 text-sm text-slate-700">
+          {s.doctorProfile.aboutText}
+        </div>
+      )}
+    </Card>
 
-                      <Card className="p-4">
-                        <div className="font-semibold text-slate-900">
-                          Методичка
-                        </div>
-                        <div className="mt-2 text-sm text-slate-700 space-y-1">
-                          {doctorContent.method
-                            .split("\n")
-                            .filter((line) => line.trim().length > 0)
-                            .map((line, idx) => (
-                              <div key={idx}>{line}</div>
-                            ))}
-                        </div>
-                      </Card>
+    <Card className="p-4">
+      <div className="font-semibold text-slate-900">Методичка</div>
+      <div className="mt-2 text-sm text-slate-700 space-y-1">
+        {s.doctorProfile.methodText
+          ?.split("\n")
+          .filter((line) => line.trim().length > 0)
+          .map((line, i) => (
+            <div key={i}>{line}</div>
+          ))}
+      </div>
+    </Card>
 
-                      <Card className="p-4">
-                        <div className="font-semibold text-slate-900">
-                          Гайды
-                        </div>
-                        <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                          {doctorContent.guidesText
-                            .split(",")
-                            .map((g) => g.trim())
-                            .filter((g) => g.length > 0)
-                            .map((g, idx) => (
-                              <Chip key={idx}>{g}</Chip>
-                            ))}
-                        </div>
-                      </Card>
+    <Card className="p-4">
+      <div className="font-semibold text-slate-900">Гайды</div>
+      <div className="mt-2 flex flex-wrap gap-2 text-xs">
+        {s.doctorProfile.guidesText
+          ?.split(",")
+          .map((g) => g.trim())
+          .filter((g) => g.length > 0)
+          .map((g, i) => (
+            <Chip key={i}>{g}</Chip>
+          ))}
+      </div>
+    </Card>
 
-                      <Card className="p-4">
-                        <div className="font-semibold text-slate-900 mb-2">
-                          Истории
-                        </div>
-                        <div className="flex gap-3 overflow-x-auto pb-1">
-                          {(doctorContent.stories || []).map((s, i) => (
-                            <div
-                              key={s.id || i}
-                              className="min-w-[180px] max-w-[200px] rounded-2xl border border-black/10 bg-slate-50 p-3 text-xs text-slate-700"
-                            >
-                              {s.title ? (
-                                <div className="font-semibold text-slate-900 mb-1">
-                                  {s.title}
-                                </div>
-                              ) : null}
-                              <div>{s.text}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </Card>
-                    </motion.div>
-                  ) : null}
+    <Card className="p-4">
+      <div className="font-semibold text-slate-900 mb-2">Истории</div>
+      <div className="flex gap-3 overflow-x-auto pb-1">
+        {[
+          {
+            title: s.doctorProfile.story1Title,
+            text: s.doctorProfile.story1Text,
+          },
+          {
+            title: s.doctorProfile.story2Title,
+            text: s.doctorProfile.story2Text,
+          },
+          {
+            title: s.doctorProfile.story3Title,
+            text: s.doctorProfile.story3Text,
+          },
+        ]
+          .filter(
+            (st) =>
+              (st.title || st.text) && (st.title || "").trim().length > 0
+          )
+          .map((st, i) => (
+            <div
+              key={i}
+              className="min-w-[180px] max-w-[200px] rounded-2xl border border-black/10 bg-slate-50 p-3 text-xs text-slate-700"
+            >
+              <div className="font-semibold text-slate-900 mb-1">
+                {st.title}
+              </div>
+              <div>{st.text}</div>
+            </div>
+          ))}
+      </div>
+    </Card>
+  </motion.div>
+) : null}
 
                   {s.page === "onboard" ? (
                     <motion.div
@@ -2205,109 +2242,27 @@
                           <div className="font-semibold text-slate-900">
                             Кабинет врача
                           </div>
+                          <Card className="p-4">
+  <div className="font-semibold text-slate-900">
+    Главный экран для пациентов
+  </div>
+  <div className="text-xs text-slate-600 mt-1">
+    Здесь вы можете отредактировать блоки «Моё образование», «О себе», «Методичка», «Гайды» и «Истории».
+  </div>
+  <Btn
+    variant="solid"
+    className="mt-3 text-xs"
+    onClick={openEditProfile}
+  >
+    Открыть конструктор главного экрана
+  </Btn>
+</Card>
+
                           <div className="text-xs text-slate-600">
                             Конструктор + список пациентов
                           </div>
                         </div>
                       </div>
-
-                      {/* КОНСТРУКТОР ГЛАВНОГО ЭКРАНА */}
-                      <Card className="p-4">
-                        <div className="font-semibold text-slate-900">
-                          Конструктор главного экрана
-                        </div>
-                        <div className="text-xs text-slate-600 mt-1">
-                          Редактируйте блоки «Моё образование», «О себе», «Методичка», «Гайды» и «Истории» — это то, что видит пациент на главном экране.
-                        </div>
-
-                        <div className="mt-4 space-y-3 text-sm">
-                          <div>
-                            <div className="text-[11px] text-slate-500 mb-1">
-                              Мое образование (каждая строка — пункт)
-                            </div>
-                            <textarea
-                              value={doctorContent.education}
-                              onChange={(e) =>
-                                updateDoctorContent({ education: e.target.value })
-                              }
-                              rows={3}
-                              className="w-full rounded-2xl bg-slate-50 border border-black/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
-                            />
-                          </div>
-
-                          <div>
-                            <div className="text-[11px] text-slate-500 mb-1">
-                              О себе
-                            </div>
-                            <textarea
-                              value={doctorContent.about}
-                              onChange={(e) =>
-                                updateDoctorContent({ about: e.target.value })
-                              }
-                              rows={3}
-                              className="w-full rounded-2xl bg-slate-50 border border-black/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
-                            />
-                          </div>
-
-                          <div>
-                            <div className="text-[11px] text-slate-500 mb-1">
-                              Методичка (каждая строка — пункт)
-                            </div>
-                            <textarea
-                              value={doctorContent.method}
-                              onChange={(e) =>
-                                updateDoctorContent({ method: e.target.value })
-                              }
-                              rows={3}
-                              className="w-full rounded-2xl bg-slate-50 border border-black/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
-                            />
-                          </div>
-
-                          <div>
-                            <div className="text-[11px] text-slate-500 mb-1">
-                              Гайды (через запятую)
-                            </div>
-                            <input
-                              value={doctorContent.guidesText}
-                              onChange={(e) =>
-                                updateDoctorContent({ guidesText: e.target.value })
-                              }
-                              className="w-full rounded-2xl bg-slate-50 border border-black/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
-                              placeholder="Сон, Питание, Кишечник…"
-                            />
-                          </div>
-
-                          <div>
-                            <div className="text-[11px] text-slate-500 mb-1">
-                              Истории (до 3 штук)
-                            </div>
-                            {(doctorContent.stories || []).map((story, idx) => (
-                              <div
-                                key={story.id || idx}
-                                className="mt-2 rounded-2xl border border-black/10 bg-slate-50 p-3 space-y-2"
-                              >
-                                <input
-                                  value={story.title}
-                                  onChange={(e) =>
-                                    updateDoctorStory(idx, "title", e.target.value)
-                                  }
-                                  className="w-full rounded-2xl bg-white border border-black/10 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-black/10"
-                                  placeholder={`Заголовок истории ${idx + 1}`}
-                                />
-                                <textarea
-                                  value={story.text}
-                                  onChange={(e) =>
-                                    updateDoctorStory(idx, "text", e.target.value)
-                                  }
-                                  rows={3}
-                                  className="w-full rounded-2xl bg-white border border-black/10 px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-black/10"
-                                  placeholder="Коротко опишите кейс…"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </Card>
 
                       <Card className="p-4">
                         <div className="font-semibold text-slate-900">
@@ -2526,48 +2481,124 @@
                 </AnimatePresence>
               </div>
 
-              {/* Bottom nav */}
-              <div
-                className="border-t border-black/10 bg-white px-3 py-3"
-                style={{
-                  paddingBottom: "env(safe-area-inset-bottom)",
-                }}
-              >
-                <div className="grid grid-cols-3 gap-2">
-                  <Btn
-                    variant="soft"
-                    className="text-sm"
-                    onClick={() =>
-                      go(
-                        s.page === "home"
-                          ? "family"
-                          : s.page === "family" || s.page === "member"
-                          ? "home"
-                          : "family"
-                      )
-                    }
-                  >
-                    {s.page === "home" ? "👤 Мой профиль" : "🏠 Главный экран"}
-                  </Btn>
-                  <Btn
-                    variant="soft"
-                    className="text-sm"
-                    onClick={() => go("member")}
-                  >
-                    👪 Член семьи
-                  </Btn>
-                  <Btn
-                    variant="soft"
-                    className="text-sm"
-                    onClick={() =>
-                      setToast("Для входа врача: 4 тапа по логотипу → PIN 2580")
-                    }
-                  >
-                    🛡️ Врач
-                  </Btn>
-                </div>
-              </div>
+             {/* Bottom nav */}
+<div
+  className="border-t border-black/10 bg-white px-3 py-3"
+  style={{
+    paddingBottom: "env(safe-area-inset-bottom)",
+  }}
+>
+  <Btn
+    variant="solid"
+    className="w-full text-sm"
+    onClick={() =>
+      go(
+        s.page === "home" || s.page === "onboard"
+          ? "family"
+          : "home"
+      )
+    }
+  >
+    {s.page === "home" || s.page === "onboard"
+      ? "👤 Мой профиль"
+      : "🏠 Главный экран"}
+  </Btn>
+</div>
 
+<Modal
+  open={menuOpen}
+  title="Меню"
+  subtitle="Быстрый переход по экранам"
+  onClose={() => setMenuOpen(false)}
+>
+  <div className="space-y-2 text-sm">
+    <Btn
+      variant="soft"
+      className="w-full text-left"
+      onClick={() => {
+        go("home");
+        setMenuOpen(false);
+      }}
+    >
+      🏠 Главный экран
+    </Btn>
+    <Btn
+      variant="soft"
+      className="w-full text-left"
+      onClick={() => {
+        go("family");
+        setMenuOpen(false);
+      }}
+    >
+      👤 Мой профиль
+    </Btn>
+    {activePatient && (
+      <Btn
+        variant="soft"
+        className="w-full text-left"
+        onClick={() => {
+          setS((prev) => ({
+            ...prev,
+            page: "member",
+            memberTab: "overview",
+          }));
+          setMenuOpen(false);
+        }}
+      >
+        👪 Члены семьи
+      </Btn>
+    )}
+    <Btn
+      variant="soft"
+      className="w-full text-left"
+      onClick={() => {
+        setS((prev) => ({
+          ...prev,
+          page: "member",
+          memberTab: "chat",
+        }));
+        setMenuOpen(false);
+      }}
+    >
+      💬 Чат с врачом
+    </Btn>
+    <Btn
+      variant="soft"
+      className="w-full text-left"
+      onClick={() => {
+        setS((prev) => ({
+          ...prev,
+          page: "member",
+          memberTab: "consult",
+        }));
+        setMenuOpen(false);
+      }}
+    >
+      🧠 Консультации
+    </Btn>
+    <Btn
+      variant="soft"
+      className="w-full text-left"
+      onClick={() => {
+        setMenuOpen(false);
+        setPin("");
+        setPinErr(false);
+        setDoctorOpen(true);
+      }}
+    >
+      🛡️ Вход врача (PIN)
+    </Btn>
+    <Btn
+      variant="soft"
+      className="w-full text-left text-red-600"
+      onClick={reset}
+    >
+      ↺ Сбросить данные (демо)
+    </Btn>
+  </div>
+</Modal>
+            
+            
               {/* Modals */}
               <Modal
                 open={addOpen}
@@ -2633,6 +2664,142 @@
                 </div>
               </Modal>
 
+            <Modal
+  open={editProfileOpen}
+  title="Конструктор главного экрана"
+  subtitle="Тексты, которые видит пациент на первом экране"
+  onClose={() => setEditProfileOpen(false)}
+  footer={
+    <Btn variant="solid" className="w-full" onClick={saveEditProfile}>
+      Сохранить
+    </Btn>
+  }
+>
+  <div className="space-y-3 text-sm max-h-[60vh] overflow-y-auto pr-1">
+    <div>
+      <div className="text-xs text-slate-500">Имя врача</div>
+      <input
+        value={dpName}
+        onChange={(e) => setDpName(e.target.value)}
+        className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
+      />
+    </div>
+
+    <div className="grid grid-cols-2 gap-2">
+      <div>
+        <div className="text-xs text-slate-500">Заголовок</div>
+        <input
+          value={dpTitle}
+          onChange={(e) => setDpTitle(e.target.value)}
+          className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
+        />
+      </div>
+      <div>
+        <div className="text-xs text-slate-500">Подзаголовок</div>
+        <input
+          value={dpSubtitle}
+          onChange={(e) => setDpSubtitle(e.target.value)}
+          className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
+        />
+      </div>
+    </div>
+
+    <div>
+      <div className="text-xs text-slate-500">Моё образование</div>
+      <textarea
+        value={dpEdu}
+        onChange={(e) => setDpEdu(e.target.value)}
+        rows={3}
+        className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
+        placeholder="Каждый пункт с новой строки"
+      />
+    </div>
+
+    <div>
+      <div className="text-xs text-slate-500">О себе</div>
+      <textarea
+        value={dpAbout}
+        onChange={(e) => setDpAbout(e.target.value)}
+        rows={3}
+        className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
+      />
+    </div>
+
+    <div>
+      <div className="text-xs text-slate-500">Методичка</div>
+      <textarea
+        value={dpMethod}
+        onChange={(e) => setDpMethod(e.target.value)}
+        rows={3}
+        className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
+        placeholder="1. ...&#10;2. ..."
+      />
+    </div>
+
+    <div>
+      <div className="text-xs text-slate-500">
+        Гайды (через запятую)
+      </div>
+      <textarea
+        value={dpGuides}
+        onChange={(e) => setDpGuides(e.target.value)}
+        rows={2}
+        className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
+        placeholder="Сон, Питание, Кишечник…"
+      />
+    </div>
+
+    <div>
+      <div className="text-xs text-slate-500">История 1 — заголовок</div>
+      <input
+        value={dpS1Title}
+        onChange={(e) => setDpS1Title(e.target.value)}
+        className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
+      />
+      <div className="text-xs text-slate-500 mt-2">Текст</div>
+      <textarea
+        value={dpS1Text}
+        onChange={(e) => setDpS1Text(e.target.value)}
+        rows={2}
+        className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
+      />
+    </div>
+
+    <div>
+      <div className="text-xs text-slate-500">История 2 — заголовок</div>
+      <input
+        value={dpS2Title}
+        onChange={(e) => setDpS2Title(e.target.value)}
+        className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
+      />
+      <div className="text-xs text-slate-500 mt-2">Текст</div>
+      <textarea
+        value={dpS2Text}
+        onChange={(e) => setDpS2Text(e.target.value)}
+        rows={2}
+        className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
+      />
+    </div>
+
+    <div>
+      <div className="text-xs text-slate-500">История 3 — заголовок</div>
+      <input
+        value={dpS3Title}
+        onChange={(e) => setDpS3Title(e.target.value)}
+        className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
+      />
+      <div className="text-xs text-slate-500 mt-2">Текст</div>
+      <textarea
+        value={dpS3Text}
+        onChange={(e) => setDpS3Text(e.target.value)}
+        rows={2}
+        className="mt-1 w-full rounded-2xl bg-slate-50 border border-black/10 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black/10"
+      />
+    </div>
+  </div>
+</Modal>
+
+            
               <Modal
                 open={anketaOpen}
                 title="Анкета (мини)"
