@@ -13,14 +13,15 @@
       href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
     />
     <style>
-  html,
+    html,
   body {
     width: 100%;
     max-width: 100%;
     height: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden; /* убираем общий скролл страницы */
+    overflow-x: hidden;
+    overflow-y: auto; /* пусть можно скроллить, если экран маленький */
   }
   * {
     box-sizing: border-box;
@@ -256,7 +257,7 @@
 
       function initialState() {
         return {
-          page: "onboard", // onboard | family | member | doctor
+         page: "home", // home | onboard | family | member | doctor
           memberTab: "overview", // overview | anketa | labs | chat | consult
 
           patients: makeDemoPatients(),
@@ -1199,9 +1200,9 @@ const doctorMarkTreatmentReady = () => {
           exit: { opacity: 0, y: 10 },
         };
 
-       return (
-  <div className="h-screen overflow-hidden flex items-center justify-center p-4 bg-slate-100">
-            <div className="w-full max-w-[430px] rounded-[32px] border border-black/10 bg-white overflow-hidden shadow-[0_35px_130px_rgba(15,23,42,0.22)]">
+              return (
+  <div className="min-h-screen flex items-center justify-center p-4 bg-slate-100">
+            <div className="w-full max-w-[430px] rounded-[32px] border border-black/10 bg-white overflow-hidden shadow-[0_35px_130px_rgba(15,23,42,0.22)] flex flex-col">
               {/* Topbar */}
               <div className="px-5 pt-5 pb-4 border-b border-black/10 bg-white">
                 <div className="flex items-center justify-between">
@@ -1255,13 +1256,126 @@ const doctorMarkTreatmentReady = () => {
 
               {/* Pages */}
               <div
-                className="pb-[92px]"
+                className="flex-1 overflow-y-auto"
                 style={{
                   paddingBottom:
                     "calc(92px + env(safe-area-inset-bottom))",
                 }}
               >
                 <AnimatePresence mode="wait">
+
+                                    {s.page === "home" ? (
+                    <motion.div
+                      key="home"
+                      variants={pageVariants}
+                      className="p-5 space-y-4"
+                    >
+                      <Card className="p-5">
+                        <div className="flex items-start gap-4">
+                          <div className="w-14 h-14 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-2xl">
+                            🩺
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-xs uppercase tracking-wide text-slate-500">
+                              Врач превентивной медицины
+                            </div>
+                            <div className="text-lg font-semibold text-slate-900 mt-1">
+                              Имя Фамилия
+                            </div>
+                            <div className="text-sm text-slate-600 mt-1">
+                              Работаю с семьями: сон, питание, анализы и образ жизни
+                              в одной системе.
+                            </div>
+                            <Btn
+                              variant="solid"
+                              className="mt-4 text-sm w-full"
+                              onClick={() => go("family")}
+                            >
+                              Мой профиль
+                            </Btn>
+                          </div>
+                        </div>
+                      </Card>
+
+                      <Card className="p-4">
+                        <div className="font-semibold text-slate-900">
+                          Мое образование
+                        </div>
+                        <div className="mt-2 text-sm text-slate-700 space-y-1">
+                          <div>• Медицинский вуз / педиатрия / терапия</div>
+                          <div>• Курсы по превентивной медицине и нутрициологии</div>
+                          <div>• Обучение по работе с семейными кейсами</div>
+                        </div>
+                      </Card>
+
+                      <Card className="p-4">
+                        <div className="font-semibold text-slate-900">
+                          О себе
+                        </div>
+                        <div className="mt-2 text-sm text-slate-700">
+                          Здесь можно коротко описать, как вы работаете: без
+                          запугивания, с уважением к пациенту, шаг за шагом.
+                        </div>
+                      </Card>
+
+                      <Card className="p-4">
+                        <div className="font-semibold text-slate-900">
+                          Методичка
+                        </div>
+                        <div className="mt-2 text-sm text-slate-700 space-y-1">
+                          <div>1. Как подготовиться к первой консультации.</div>
+                          <div>2. Какие анализы обычно нужны.</div>
+                          <div>3. Как вести дневник самочувствия.</div>
+                        </div>
+                      </Card>
+
+                      <Card className="p-4">
+                        <div className="font-semibold text-slate-900">
+                          Гайды
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                          <Chip>Сон</Chip>
+                          <Chip>Питание</Chip>
+                          <Chip>Кишечник</Chip>
+                          <Chip>Гормоны</Chip>
+                          <Chip>Дети</Chip>
+                        </div>
+                      </Card>
+
+                      <Card className="p-4">
+                        <div className="font-semibold text-slate-900 mb-2">
+                          Истории
+                        </div>
+                        <div className="flex gap-3 overflow-x-auto pb-1">
+                          {[
+                            {
+                              title: "Сон ребенка",
+                              text: "Как перевели семью с ночных просыпаний на стабильный сон.",
+                            },
+                            {
+                              title: "Хроническая усталость",
+                              text: "Кейс, где анализы и режим дня вернули энергию.",
+                            },
+                            {
+                              title: "Кишечник",
+                              text: "История про вздутие, питание и микробиоту.",
+                            },
+                          ].map((s, i) => (
+                            <div
+                              key={i}
+                              className="min-w-[180px] max-w-[200px] rounded-2xl border border-black/10 bg-slate-50 p-3 text-xs text-slate-700"
+                            >
+                              <div className="font-semibold text-slate-900 mb-1">
+                                {s.title}
+                              </div>
+                              <div>{s.text}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </Card>
+                    </motion.div>
+                  ) : null}
+                  
                   {s.page === "onboard" ? (
                     <motion.div
                       key="onboard"
@@ -2223,7 +2337,7 @@ const doctorMarkTreatmentReady = () => {
                 </AnimatePresence>
               </div>
 
-              {/* Bottom nav */}
+                           {/* Bottom nav */}
               <div
                 className="border-t border-black/10 bg-white px-3 py-3"
                 style={{
@@ -2234,31 +2348,36 @@ const doctorMarkTreatmentReady = () => {
                   <Btn
                     variant="soft"
                     className="text-sm"
-                    onClick={() => go("family")}
+                    onClick={() =>
+                      go(
+                        s.page === "home"
+                          ? "family"
+                          : s.page === "family" || s.page === "member"
+                          ? "home"
+                          : "family"
+                      )
+                    }
                   >
-                    🏠 Профиль
+                    {s.page === "home" ? "👤 Мой профиль" : "🏠 Главный экран"}
                   </Btn>
                   <Btn
                     variant="soft"
                     className="text-sm"
                     onClick={() => go("member")}
                   >
-                    👤 Член семьи
+                    👪 Член семьи
                   </Btn>
                   <Btn
                     variant="soft"
                     className="text-sm"
                     onClick={() =>
-                      setToast(
-                        "Врач: 4 тапа по логотипу → PIN 2580"
-                      )
+                      setToast("Для входа врача: 4 тапа по логотипу → PIN 2580")
                     }
                   >
                     🛡️ Врач
                   </Btn>
-                </div>         
+                </div>
               </div>
-            </div>
 
             {/* Modals */}
             <Modal
