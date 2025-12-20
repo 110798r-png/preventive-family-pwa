@@ -1,4 +1,7 @@
-// ====== УТИЛИТЫ / ДАННЫЕ ======
+// PREVENTIVE Family PWA — Vanilla JS + Tailwind
+// ===========================================
+
+// ----- Constants & helpers -----
 
 const STORAGE_KEY = "prev_family_pwa_light_vanilla";
 const DOCTOR_PIN = "2580";
@@ -75,7 +78,7 @@ function defaultDoctorProfile() {
       "2. Какие анализы обычно нужны.\n" +
       "3. Как вести дневник самочувствия.",
     guidesText: "Сон, Питание, Кишечник, Гормоны, Дети",
-    story1Title: "Сон ребенка",
+    story1Title: "Сон ребёнка",
     story1Text: "Как перевели семью с ночных просыпаний на стабильный сон.",
     story2Title: "Хроническая усталость",
     story2Text: "Кейс, где анализы и режим дня вернули энергию.",
@@ -191,21 +194,14 @@ function makeDemoPatients() {
 
 function initialState() {
   return {
-    page: "home", // home | onboard | family | member | doctor
-    memberTab: "overview",
+    page: "home", // home | family | member | doctor
+    memberTab: "overview", // overview | anketa | labs | chat | consult
     patients: makeDemoPatients(),
     activePatientId: "p1",
     doctorActivePatientId: "p1",
     notifications: [],
     doctorProfile: defaultDoctorProfile(),
-    // дополнительные поля UI
     toast: "",
-    menuOpen: false,
-    addOpen: false,
-    anketaOpen: false,
-    doctorOpen: false,
-    editProfileOpen: false,
-    openCat: null,
   };
 }
 
@@ -232,24 +228,25 @@ function saveState(s) {
   }
 }
 
-// ====== ГЛОБАЛЬНОЕ СОСТОЯНИЕ ======
+// ----- Global state -----
 
 let state = loadState();
 const root = document.getElementById("root");
+let brandTapTimes = [];
 
-// helper для обновления состояния
+// helpers
+
 function setState(patch) {
   state = { ...state, ...patch };
   saveState(state);
   renderApp();
 }
 
-// ====== ВСПОМОГАТЕЛЬНЫЕ GETTER’ы ======
-
 function getActivePatient() {
   return (
     state.patients.find((p) => p.id === state.activePatientId) ||
-    state.patients[0]
+    state.patients[0] ||
+    null
   );
 }
 
@@ -257,7 +254,9 @@ function getActiveMember() {
   const p = getActivePatient();
   if (!p) return null;
   return (
-    p.members.find((m) => m.id === p.selectedMemberId) || p.members[0] || null
+    p.members.find((m) => m.id === p.selectedMemberId) ||
+    p.members[0] ||
+    null
   );
 }
 
@@ -265,7 +264,15 @@ function getUnreadCount() {
   return state.notifications.filter((n) => n.unread).length;
 }
 
-// ====== РЕНДЕР HTML (БЕЗ REACT) ======
+function showToast(msg) {
+  setState({ toast: msg });
+  setTimeout(() => {
+    state.toast = "";
+    renderApp();
+  }, 1700);
+}
+
+// ----- Render parts -----
 
 function renderTopbarHTML() {
   const p = getActivePatient();
@@ -490,7 +497,7 @@ function renderFamilyHTML() {
               Внутри — члены семьи и их анкеты
             </div>
           </div>
-          <button data-action="open-add"
+          <button data-action="add-member"
             class="rounded-2xl bg-slate-900 text-white text-sm px-4 py-2 active:scale-95 transition">
             + Добавить
           </button>
@@ -504,7 +511,6 @@ function renderFamilyHTML() {
   `;
 }
 
-// для примера: рендер вкладки "Чат" члена семьи
 function renderMemberChatHTML(member) {
   const msgs = member.chats || [];
   const consultActive =
@@ -521,9 +527,7 @@ function renderMemberChatHTML(member) {
               : "bg-slate-50 text-slate-900 border border-black/10"
           } max-w-[80%] rounded-2xl px-4 py-3">
             <div class="text-[11px] opacity-70">
-              ${mine ? "Вы" : "Врач"} • ${new Date(
-        msg.ts
-      ).toLocaleString()}
+              ${mine ? "Вы" : "Врач"} • ${new Date(msg.ts).toLocaleString()}
             </div>
             <div class="mt-1 text-sm leading-relaxed whitespace-pre-wrap">
               ${msg.text}
@@ -550,7 +554,10 @@ function renderMemberChatHTML(member) {
         </span>
       </div>
       <div class="p-4 h-[320px] overflow-auto space-y-3 bg-white" id="chat-list">
-        ${listHTML || "<div class='text-xs text-slate-500'>Пока нет сообщений</div>"}
+        ${
+          listHTML ||
+          "<div class='text-xs text-slate-500'>Пока нет сообщений</div>"
+        }
       </div>
       <div class="p-3 border-t border-black/10 flex gap-2 bg-white">
         <input id="chat-input"
@@ -594,7 +601,6 @@ function renderMemberTabsHTML(member) {
   if (state.memberTab === "chat") {
     contentHTML = renderMemberChatHTML(member);
   } else if (state.memberTab === "overview") {
-    // тут можно по аналогии перенести твой JSX "Обзор"
     contentHTML = `
       <div class="rounded-3xl border border-black/10 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)] p-4">
         <div class="text-sm text-slate-700">
@@ -618,7 +624,7 @@ function renderMemberTabsHTML(member) {
               }
             </div>
           </div>
-          <button data-action="open-anketa"
+          <button data-action="edit-anketa"
             class="rounded-2xl bg-slate-900 text-white text-sm px-4 py-2 active:scale-95 transition">
             ${ank ? "Обновить" : "Заполнить"}
           </button>
@@ -642,7 +648,6 @@ function renderMemberTabsHTML(member) {
       </div>
     `;
   } else if (state.memberTab === "labs") {
-    // Здесь — упрощённый блок анализов, по желанию можно перенести твои карточки 1-в-1
     const catsHTML = LAB_CATS.map((c) => {
       const count = (member.labs?.[c.id] || []).length;
       return `
@@ -671,13 +676,12 @@ function renderMemberTabsHTML(member) {
       </div>
     `;
   } else if (state.memberTab === "consult") {
-    // Упрощённый блок консультаций
     contentHTML = `
       <div class="rounded-3xl border border-black/10 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)] p-4 space-y-3">
         <div class="font-semibold text-slate-900">Консультации</div>
         <div class="text-xs text-slate-600">
           Здесь можно так же, как в React-версии, отобразить срочную и превентивную консультации,
-          кнопки "Оплачено" и т.д., просто заменив JSX на обычный HTML.
+          кнопки "Оплачено" и т.д. Мы добавим эту логику следующим шагом.
         </div>
       </div>
     `;
@@ -710,14 +714,12 @@ function renderMemberTabsHTML(member) {
 }
 
 function renderMemberHTML() {
-  const p = getActivePatient();
   const m = getActiveMember();
-  if (!p || !m) return "<div class='p-5'>Нет данных</div>";
+  if (!m) return "<div class='p-5'>Нет данных</div>";
   return renderMemberTabsHTML(m);
 }
 
 function renderDoctorHTML() {
-  // упрощённый экран врача: список пациентов + подсказка по PIN
   const patientsHTML = state.patients
     .map(
       (p) => `
@@ -748,14 +750,14 @@ function renderDoctorHTML() {
         <div class="text-right">
           <div class="font-semibold text-slate-900">Кабинет врача</div>
           <div class="text-xs text-slate-600">
-            Конструктор + список пациентов (детально можно доработать по React-версии)
+            Список пациентов. Остальные функции можно добавить по оригинальному приложению.
           </div>
         </div>
       </div>
 
       <div class="rounded-3xl border border-black/10 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)] p-4">
         <div class="font-semibold text-slate-900">Пациенты</div>
-        <div class="mt-3 space-y-2">
+        <div class="mt-3 жиspace-y-2">
           ${patientsHTML}
         </div>
       </div>
@@ -771,17 +773,11 @@ function renderBottomNavHTML() {
       style="padding-bottom: env(safe-area-inset-bottom);">
       <button data-action="toggle-main"
         class="w-full rounded-2xl bg-slate-900 text-white text-sm px-4 py-3 active:scale-95 transition">
-        ${
-          !isProfile
-            ? "👤 Мой профиль"
-            : "🏠 Главный экран"
-        }
+        ${!isProfile ? "👤 Мой профиль" : "🏠 Главный экран"}
       </button>
     </div>
   `;
 }
-
-// основной рендер
 
 function renderApp() {
   const contentHTML =
@@ -818,15 +814,7 @@ function renderApp() {
   `;
 }
 
-// ====== ОБРАБОТЧИКИ СОБЫТИЙ ======
-
-function showToast(msg) {
-  setState({ toast: msg });
-  setTimeout(() => {
-    state.toast = "";
-    renderApp();
-  }, 1700);
-}
+// ----- Event handlers -----
 
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-action]");
@@ -834,7 +822,8 @@ document.addEventListener("click", (e) => {
   const action = btn.dataset.action;
 
   if (action === "open-menu") {
-    showToast("Меню пока заглушка (можно перенести из React)");
+    showToast("Меню пока заглушка (потом добавим пункты, как в React)");
+    return;
   }
 
   if (action === "toggle-main") {
@@ -843,21 +832,29 @@ document.addEventListener("click", (e) => {
       state.page === "member" ||
       state.page === "doctor";
     setState({ page: isProfile ? "home" : "family" });
+    return;
   }
 
   if (action === "go-family") {
     setState({ page: "family" });
+    return;
   }
 
   if (action === "brand-tap") {
-    // тут можно сделать скрытый вход врача по 4 тапам + PIN
-    const pin = prompt("PIN врача (демо: 2580)");
-    if (pin === DOCTOR_PIN) {
-      setState({ page: "doctor" });
-      showToast("Вход врача");
-    } else if (pin) {
-      showToast("Неверный PIN");
+    const now = Date.now();
+    brandTapTimes = brandTapTimes.filter((t) => now - t < 900);
+    brandTapTimes.push(now);
+    if (brandTapTimes.length >= 4) {
+      brandTapTimes = [];
+      const pin = prompt("PIN врача (демо: 2580)");
+      if (pin === DOCTOR_PIN) {
+        setState({ page: "doctor" });
+        showToast("Вход врача");
+      } else if (pin) {
+        showToast("Неверный PIN");
+      }
     }
+    return;
   }
 
   if (action === "mark-notif-read") {
@@ -868,121 +865,9 @@ document.addEventListener("click", (e) => {
       setState({ notifications: notifs });
       showToast("Уведомления прочитаны");
     }
+    return;
   }
 
-  if (action === "go-family") {
-    setState({ page: "family" });
-  }
-
-  if (action === "go-home") {
-    setState({ page: "home" });
-  }
-
-  if (action === "go-family") {
-    setState({ page: "family" });
-  }
-
-  if (action === "go-home") {
-    setState({ page: "home" });
-  }
-
-  if (action === "go-family") {
-    setState({ page: "family" });
-  }
-
-  if (action === "go-home") {
-    setState({ page: "home" });
-  }
-
-  if (action === "go-family") {
-    setState({ page: "family" });
-  }
-
-  if (action === "go-home") {
-    setState({ page: "home" });
-  }
-
-  if (action === "go-family") {
-    setState({ page: "family" });
-  }
-
-  if (action === "go-home") {
-    setState({ page: "home" });
-  }
-
-  if (action === "go-family") {
-    setState({ page: "family" });
-  }
-
-  if (action === "go-home") {
-    setState({ page: "home" });
-  }
-
-  if (action === "go-family") {
-    setState({ page: "family" });
-  }
-
-  if (action === "go-home") {
-    setState({ page: "home" });
-  }
-
-  // (простая логика, можно почистить повторы — здесь главное показать механизм)
-
-  if (action === "go-family") {
-    setState({ page: "family" });
-  }
-
-  if (action === "go-home") {
-    setState({ page: "home" });
-  }
-
-  if (action === "go-family") {
-    setState({ page: "family" });
-  }
-
-  if (action === "go-home") {
-    setState({ page: "home" });
-  }
-
-  if (action === "go-family") {
-    setState({ page: "family" });
-  }
-
-  if (action === "go-home") {
-    setState({ page: "home" });
-  }
-
-  // — ниже полезное:
-
-  if (action === "go-family") {
-    setState({ page: "family" });
-  }
-
-  if (action === "go-home") {
-    setState({ page: "home" });
-  }
-
-  if (action === "go-family") {
-    setState({ page: "family" });
-  }
-
-  if (action === "go-home") {
-    setState({ page: "home" });
-  }
-
-  if (action === "go-family") {
-    setState({ page: "family" });
-  }
-
-  if (action === "go-home") {
-    setState({ page: "home" });
-  }
-
-  if (action === "go-family") {
-    setState({ page: "family" });
-  }
-
-  // выбор члена семьи
   if (action === "select-member") {
     const id = btn.dataset.id;
     const patients = state.patients.map((p) =>
@@ -992,24 +877,55 @@ document.addEventListener("click", (e) => {
     state.memberTab = "overview";
     saveState(state);
     renderApp();
+    return;
   }
 
   if (action === "set-tab") {
     const tab = btn.dataset.tab;
     setState({ memberTab: tab });
+    return;
   }
 
   if (action === "doctor-select-patient") {
     const id = btn.dataset.id;
     setState({ doctorActivePatientId: id });
+    return;
   }
 
-  if (action === "open-add") {
-    // в этой версии я не делал модалку — можно сделать через prompt'ы или через отдельный блок
-    showToast("Добавление члена семьи можно реализовать через модалку/форму (аналог React-кода)");
+  if (action === "add-member") {
+    const relation = prompt("Кто это? (жена, ребёнок...)", "ребёнок") || "член семьи";
+    const name = prompt("Имя", "");
+    const dob = prompt("Дата рождения (ГГГГ-ММ-ДД)", "2024-01-01");
+    const sex = prompt("Пол (m/f)", "f") || "f";
+    if (!name || !dob) {
+      showToast("Имя и дата рождения обязательны");
+      return;
+    }
+    const p = getActivePatient();
+    if (!p) return;
+    const newMember = {
+      ...defaultMember({ name: name.trim(), dob: dob.trim(), sex, relation }),
+      id: uid("m"),
+    };
+    const patients = state.patients.map((pp) =>
+      pp.id === p.id
+        ? {
+            ...pp,
+            members: [newMember, ...pp.members],
+            selectedMemberId: newMember.id,
+          }
+        : pp
+    );
+    state.patients = patients;
+    state.page = "member";
+    state.memberTab = "anketa";
+    saveState(state);
+    renderApp();
+    showToast("Член семьи добавлен");
+    return;
   }
 
-  if (action === "open-anketa") {
+  if (action === "edit-anketa") {
     const p = getActivePatient();
     const m = getActiveMember();
     if (!p || !m) return;
@@ -1035,41 +951,60 @@ document.addEventListener("click", (e) => {
     saveState(state);
     renderApp();
     showToast("Анкета сохранена");
+    return;
+  }
+
+  if (action === "open-lab") {
+    const cat = btn.dataset.cat;
+    const p = getActivePatient();
+    const m = getActiveMember();
+    if (!p || !m) return;
+    const title = LAB_CATS.find((c) => c.id === cat)?.title || "Анализ";
+    alert(
+      `Открытие категории "${title}".\n\nЗдесь позже добавим загрузку файлов и историю — по аналогии с React.`
+    );
+    return;
+  }
+
+  if (action === "chat-send") {
+    const input = document.getElementById("chat-input");
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text) return;
+    const p = getActivePatient();
+    const m = getActiveMember();
+    if (!p || !m) return;
+
+    const patients = state.patients.map((pp) => {
+      if (pp.id !== p.id) return pp;
+      const members = pp.members.map((mm) => {
+        if (mm.id !== m.id) return mm;
+        return {
+          ...mm,
+          chats: [
+            ...(mm.chats || []),
+            { from: "patient", text, ts: Date.now() },
+          ],
+        };
+      });
+      return { ...pp, members };
+    });
+
+    state.patients = patients;
+    saveState(state);
+    renderApp();
+    return;
   }
 });
 
-// отправка чата (через делегирование + поиск input по id)
-document.addEventListener("click", (e) => {
-  const btn = e.target.closest("[data-action='chat-send']");
-  if (!btn) return;
-  const input = document.getElementById("chat-input");
-  if (!input) return;
-  const text = input.value.trim();
-  if (!text) return;
-  const p = getActivePatient();
-  const m = getActiveMember();
-  if (!p || !m) return;
-
-  const patients = state.patients.map((pp) => {
-    if (pp.id !== p.id) return pp;
-    const members = pp.members.map((mm) => {
-      if (mm.id !== m.id) return mm;
-      return {
-        ...mm,
-        chats: [
-          ...(mm.chats || []),
-          { from: "patient", text, ts: Date.now() },
-        ],
-      };
-    });
-    return { ...pp, members };
-  });
-
-  state.patients = patients;
-  saveState(state);
-  renderApp();
-  showToast("Отправлено");
+// Отправка по Enter в поле чата
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && e.target && e.target.id === "chat-input") {
+    e.preventDefault();
+    const btn = document.querySelector("[data-action='chat-send']");
+    if (btn) btn.click();
+  }
 });
 
-// ====== СТАРТ ======
+// ----- Start -----
 renderApp();
