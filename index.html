@@ -2,7 +2,7 @@
 <html lang="ru">
   <head>
     <meta charset="utf-8" />
-    <title>PREVENTIVE Family PWA — Preview</title>
+    <title>PREVENTIVE Family PWA — light</title>
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
@@ -21,25 +21,15 @@
         margin: 0;
         padding: 0;
         overflow: hidden;
-        background: #e5e7eb; /* slate-200 */
       }
-      * {
-        box-sizing: border-box;
-      }
-      img {
-        max-width: 100%;
-        display: block;
-      }
-      #root {
+      #app {
         width: 100%;
         height: 100%;
       }
     </style>
   </head>
-  <body class="bg-slate-100">
-    <div id="root"></div>
-
-    <!-- Подключаем наш JS с логикой приложения -->
+  <body class="bg-gray-100">
+    <div id="app"></div>
     <script src="./app.js"></script>
   </body>
 </html>
