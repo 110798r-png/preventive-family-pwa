@@ -998,6 +998,68 @@ function renderDoctor() {
   `;
 }
 
+  function renderModals(activePatient, member) {
+  let html = "";
+
+  // Модалка добавления члена семьи
+  if (state.uiAddMemberOpen) {
+    html += `
+      <div class="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black bg-opacity-40">
+        <div class="bg-white rounded-3xl w-full max-w-md mx-4 mb-4 sm:mb-0 p-4 space-y-3">
+          <div class="flex items-center justify-between mb-1">
+            <div>
+              <div class="font-semibold text-gray-900">Добавить члена семьи</div>
+              <div class="text-xs text-gray-500">Добавление внутри текущего пациента</div>
+            </div>
+            <button data-action="close-modal" data-modal="add-member"
+              class="px-2 py-1 rounded-xl bg-gray-100">✕</button>
+          </div>
+          <div class="space-y-3 text-sm">
+            <div>
+              <div class="text-xs text-gray-500">Кто это?</div>
+              <select id="addRelation"
+                class="mt-1 w-full rounded-2xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm">
+                <option value="я">Я</option>
+                <option value="жена">Жена</option>
+                <option value="муж">Муж</option>
+                <option value="ребёнок">Ребёнок</option>
+                <option value="мама">Мама</option>
+                <option value="папа">Папа</option>
+                <option value="другое">Другое</option>
+              </select>
+            </div>
+            <div>
+              <div class="text-xs text-gray-500">Имя</div>
+              <input id="addName" type="text"
+                class="mt-1 w-full rounded-2xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm"
+                placeholder="Например: Марк" />
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <div class="text-xs text-gray-500">Дата рождения</div>
+                <input id="addDob" type="date"
+                  class="mt-1 w-full rounded-2xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm" />
+              </div>
+              <div>
+                <div class="text-xs text-gray-500">Пол</div>
+                <select id="addSex"
+                  class="mt-1 w-full rounded-2xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm">
+                  <option value="f">Ж</option>
+                  <option value="m">М</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <button data-action="save-add-member"
+            class="w-full mt-2 rounded-2xl bg-gray-900 text-white text-sm py-2.5 active:scale-95 transition">
+            Сохранить
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  // Модалка мини-анкеты
   if (state.uiAnketaOpen && member) {
     const goal = member.anketa?.goal || "";
     const comp = member.anketa?.complaints || "";
@@ -1039,6 +1101,7 @@ function renderDoctor() {
     `;
   }
 
+  // Боковое меню
   if (state.uiMenuOpen) {
     html += `
       <div class="fixed inset-0 z-30 flex items-end sm:items-center justify-center bg-black bg-opacity-40">
