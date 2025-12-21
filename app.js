@@ -928,7 +928,7 @@ function renderDoctor() {
     })
     .join("");
 
-      return `
+  return `
     <div class="p-4 space-y-4">
       <div class="flex items-center justify-between">
         <button data-action="doctor-exit"
@@ -938,7 +938,6 @@ function renderDoctor() {
         <div class="text-right text-xs text-gray-600">Кабинет врача</div>
       </div>
 
-      <!-- НОВАЯ КАРТОЧКА СТАТУСА -->
       <div class="bg-white rounded-2xl border border-gray-200 p-4">
         <div class="font-semibold text-gray-900 mb-2">Статус врача</div>
         <div class="text-xs text-gray-600">
