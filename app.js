@@ -209,6 +209,11 @@ function initialState() {
     patients,
     activePatientId: patients[0]?.id || null,
     doctorActivePatientId: patients[0]?.id || null,
+
+    // НОВОЕ: кто сейчас сидит в приложении и какой статус у врача
+    mode: "patient",          // "patient" | "doctor"
+    doctorStatus: "offline",  // "online" | "offline"
+
     notifications: [],
     paymentRequests: [],
     toast: "",
@@ -227,6 +232,10 @@ function loadState() {
     if (!saved || typeof saved !== "object") return base;
 
     base = Object.assign(base, saved);
+
+        // НОВОЕ: дефолты для новых полей
+    if (!base.mode) base.mode = "patient";
+    if (!base.doctorStatus) base.doctorStatus = "offline";
 
     if (Array.isArray(base.patients)) {
       base.patients = base.patients.map((p) => {
@@ -307,6 +316,15 @@ function renderTopBar(activePatient) {
   const name = activePatient ? activePatient.name : "Пациент не выбран";
   const phone = activePatient ? activePatient.phone : "";
 
+  const modeLabel =
+    state.mode === "doctor" ? "Режим: врач" : "Режим: пациент";
+  const statusText =
+    state.mode === "doctor"
+      ? ` • Статус врача: ${
+          state.doctorStatus === "online" ? "онлайн" : "оффлайн"
+        }`
+      : "";
+
   return `
     <div class="px-4 pt-4 pb-3 border-b border-gray-200 bg-white">
       <div class="flex items-center justify-between">
@@ -326,14 +344,16 @@ function renderTopBar(activePatient) {
           </button>
         </div>
       </div>
-      <div class="mt-3">
+            <div class="mt-3">
         <div class="text-xs text-gray-500 mb-1">${title}</div>
         <div class="font-semibold text-gray-900 text-sm">${escapeHtml(
           name
         )}</div>
         <div class="text-xs text-gray-500">${escapeHtml(phone)}</div>
+        <div class="text-[11px] text-gray-500 mt-0.5">
+          ${modeLabel}${statusText}
+        </div>
       </div>
-    </div>
   `;
 }
 
@@ -595,18 +615,35 @@ function renderMemberLabs(member) {
 
 function renderMemberChat(member) {
   const msgs = member.chats || [];
+
+  const statusLabel =
+    state.doctorStatus === "online" ? "Врач онлайн" : "Врач оффлайн";
+  const statusClass =
+    state.doctorStatus === "online" ? "text-emerald-600" : "text-gray-400";
+
   const msgsHtml = msgs
     .map((msg) => {
-      const mine = msg.from === "patient";
+      const isMine =
+        (state.mode === "patient" && msg.from === "patient") ||
+        (state.mode === "doctor" && msg.from === "doctor");
+
+      let who;
+      if (msg.from === "doctor") {
+        who = state.mode === "doctor" ? "Вы (врач)" : "Врач";
+      } else {
+        // from: patient
+        who = state.mode === "patient" ? "Вы" : "Пациент";
+      }
+
       return `
-        <div class="flex ${mine ? "justify-end" : "justify-start"}">
+        <div class="flex ${isMine ? "justify-end" : "justify-start"}">
           <div class="max-w-[80%] rounded-2xl px-3 py-2 text-sm ${
-            mine
+            isMine
               ? "bg-gray-900 text-white"
               : "bg-gray-100 text-gray-900"
           }">
             <div class="text-[10px] opacity-70">
-              ${mine ? "Вы" : "Врач"} · ${new Date(msg.ts).toLocaleString()}
+              ${who} · ${new Date(msg.ts).toLocaleString()}
             </div>
             <div class="mt-1 whitespace-pre-line">${escapeHtml(
               msg.text
@@ -623,6 +660,9 @@ function renderMemberChat(member) {
         <div>
           <div class="font-semibold text-gray-900 text-sm">Чат с врачом</div>
           <div class="text-xs text-gray-600">По выбранному члену семьи</div>
+          <div class="text-[11px] mt-0.5 ${statusClass}">
+            ${statusLabel}
+          </div>
         </div>
       </div>
       <div class="flex-1 px-4 py-3 space-y-2 overflow-y-auto bg-white">
@@ -771,6 +811,9 @@ function renderMember(activePatient, member) {
           <div class="text-xs text-gray-600">
             ${escapeHtml(member.relation)} • ${escapeHtml(fmtMemberMeta(member))}
           </div>
+          <div class="text-[11px] text-gray-500 mt-0.5">
+            Режим: ${state.mode === "doctor" ? "врач" : "пациент"}
+          </div>
         </div>
       </div>
       <div class="flex gap-2 overflow-x-auto pb-1">
@@ -885,14 +928,51 @@ function renderDoctor() {
     })
     .join("");
 
-  return `
+      return `
     <div class="p-4 space-y-4">
       <div class="flex items-center justify-between">
-        <button data-action="go-page" data-page="family"
+        <button data-action="doctor-exit"
           class="px-3 py-1.5 rounded-2xl bg-gray-100 text-sm text-gray-800 active:scale-95 transition">
           ← Выйти
         </button>
         <div class="text-right text-xs text-gray-600">Кабинет врача</div>
+      </div>
+
+      <!-- НОВАЯ КАРТОЧКА СТАТУСА -->
+      <div class="bg-white rounded-2xl border border-gray-200 p-4">
+        <div class="font-semibold text-gray-900 mb-2">Статус врача</div>
+        <div class="text-xs text-gray-600">
+          Этот статус видят пациенты в чате.
+        </div>
+        <div class="mt-3 flex gap-2">
+          <button
+            data-action="set-doctor-status"
+            data-status="online"
+            class="px-3 py-1.5 rounded-2xl text-xs border ${
+              state.doctorStatus === "online"
+                ? "bg-emerald-500 border-emerald-500 text-white"
+                : "bg-gray-50 border-gray-300 text-gray-800"
+            } active:scale-95 transition"
+          >
+            Онлайн
+          </button>
+          <button
+            data-action="set-doctor-status"
+            data-status="offline"
+            class="px-3 py-1.5 rounded-2xl text-xs border ${
+              state.doctorStatus === "offline"
+                ? "bg-gray-900 border-gray-900 text-white"
+                : "bg-gray-50 border-gray-300 text-gray-800"
+            } active:scale-95 transition"
+          >
+            Оффлайн
+          </button>
+        </div>
+        <div class="mt-2 text-xs text-gray-600">
+          Текущий статус: <b>${
+            state.doctorStatus === "online" ? "онлайн" : "оффлайн"
+          }</b>
+        </div>
       </div>
 
       <div class="bg-white rounded-2xl border border-gray-200 p-4">
@@ -918,88 +998,6 @@ function renderDoctor() {
     </div>
   `;
 }
-
-function renderPage(activePatient, member) {
-  if (state.page === "home") return renderHome();
-  if (state.page === "family") return renderFamily(activePatient);
-  if (state.page === "member") return renderMember(activePatient, member);
-  if (state.page === "doctor") return renderDoctor();
-  return `<div class="p-4 text-sm text-gray-700">Неизвестная страница</div>`;
-}
-
-function renderBottomNav() {
-  const onHome = state.page === "home" || state.page === "doctor";
-  const label = onHome ? "👤 Мой профиль" : "🏠 Главный экран";
-  const target = onHome ? "family" : "home";
-  return `
-    <div class="border-t border-gray-200 bg-white px-4 py-3">
-      <button data-action="go-page" data-page="${target}"
-        class="w-full rounded-2xl bg-gray-900 text-white text-sm py-3 active:scale-95 transition">
-        ${label}
-      </button>
-    </div>
-  `;
-}
-
-function renderModals(activePatient, member) {
-  let html = "";
-
-  if (state.uiAddMemberOpen) {
-    html += `
-      <div class="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black bg-opacity-40">
-        <div class="bg-white rounded-3xl w-full max-w-md mx-4 mb-4 sm:mb-0 p-4 space-y-3">
-          <div class="flex items-center justify-between mb-1">
-            <div>
-              <div class="font-semibold text-gray-900">Добавить члена семьи</div>
-              <div class="text-xs text-gray-500">Добавление внутри текущего пациента</div>
-            </div>
-            <button data-action="close-modal" data-modal="add-member"
-              class="px-2 py-1 rounded-xl bg-gray-100">✕</button>
-          </div>
-          <div class="space-y-3 text-sm">
-            <div>
-              <div class="text-xs text-gray-500">Кто это?</div>
-              <select id="addRelation"
-                class="mt-1 w-full rounded-2xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm">
-                <option value="я">Я</option>
-                <option value="жена">Жена</option>
-                <option value="муж">Муж</option>
-                <option value="ребёнок">Ребёнок</option>
-                <option value="мама">Мама</option>
-                <option value="папа">Папа</option>
-                <option value="другое">Другое</option>
-              </select>
-            </div>
-            <div>
-              <div class="text-xs text-gray-500">Имя</div>
-              <input id="addName" type="text"
-                class="mt-1 w-full rounded-2xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm"
-                placeholder="Например: Марк" />
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <div class="text-xs text-gray-500">Дата рождения</div>
-                <input id="addDob" type="date"
-                  class="mt-1 w-full rounded-2xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm" />
-              </div>
-              <div>
-                <div class="text-xs text-gray-500">Пол</div>
-                <select id="addSex"
-                  class="mt-1 w-full rounded-2xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm">
-                  <option value="f">Ж</option>
-                  <option value="m">М</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          <button data-action="save-add-member"
-            class="w-full mt-2 rounded-2xl bg-gray-900 text-white text-sm py-2.5 active:scale-95 transition">
-            Сохранить
-          </button>
-        </div>
-      </div>
-    `;
-  }
 
   if (state.uiAnketaOpen && member) {
     const goal = member.anketa?.goal || "";
@@ -1181,9 +1179,11 @@ function handleChatSend() {
   const member = getActiveMember();
   if (!member) return;
 
+  const author = state.mode === "doctor" ? "doctor" : "patient";
+
   member.chats = member.chats || [];
   member.chats.push({
-    from: "patient",
+    from: author,
     text,
     ts: Date.now(),
   });
@@ -1192,18 +1192,21 @@ function handleChatSend() {
   saveState();
   render();
 
-  setTimeout(() => {
-    const m2 = getActiveMember();
-    if (!m2) return;
-    m2.chats = m2.chats || [];
-    m2.chats.push({
-      from: "doctor",
-      text: "Принял(а). Отвечу в ближайшее время 👌",
-      ts: Date.now(),
-    });
-    saveState();
-    render();
-  }, 400);
+  // автоответ врача только если пишет пациент
+  if (state.mode === "patient") {
+    setTimeout(() => {
+      const m2 = getActiveMember();
+      if (!m2) return;
+      m2.chats = m2.chats || [];
+      m2.chats.push({
+        from: "doctor",
+        text: "Принял(а). Отвечу в ближайшее время 👌",
+        ts: Date.now(),
+      });
+      saveState();
+      render();
+    }, 400);
+  }
 }
 
 function handleConsultPay(type) {
@@ -1312,6 +1315,11 @@ function openDoctorLogin() {
   const pin = window.prompt("PIN врача");
   if (!pin) return;
   if (pin === DOCTOR_PIN) {
+    // включаем режим врача
+    state.mode = "doctor";
+    if (!state.doctorStatus) {
+      state.doctorStatus = "online"; // по умолчанию онлайн
+    }
     state.page = "doctor";
     (state.notifications || []).forEach((n) => {
       n.unread = false;
@@ -1369,6 +1377,12 @@ document.addEventListener("click", function (e) {
     case "go-page": {
       const page = el.dataset.page;
       if (!page) return;
+
+      // если были в кабинете врача и идём в профиль — считаем что выходим из режима врача
+      if (state.page === "doctor" && page === "family") {
+        state.mode = "patient";
+      }
+
       state.page = page;
       if (page === "family" && !getActivePatient() && state.patients[0]) {
         state.activePatientId = state.patients[0].id;
@@ -1456,6 +1470,30 @@ document.addEventListener("click", function (e) {
       const id = el.dataset.id;
       const ok = el.dataset.ok === "1";
       handleDoctorConfirmPay(id, ok);
+      break;
+    }
+          case "doctor-exit":
+      // явный выход из режима врача
+      state.mode = "patient";
+      state.page = "family";
+      if (!getActivePatient() && state.patients[0]) {
+        state.activePatientId = state.patients[0].id;
+      }
+      saveState();
+      render();
+      showToast("Вы вышли из кабинета врача");
+      break;
+    case "set-doctor-status": {
+      const status = el.dataset.status;
+      if (status !== "online" && status !== "offline") return;
+      state.doctorStatus = status;
+      saveState();
+      render();
+      showToast(
+        status === "online"
+          ? "Статус врача: онлайн"
+          : "Статус врача: оффлайн"
+      );
       break;
     }
   }
