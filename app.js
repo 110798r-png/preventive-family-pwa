@@ -210,6 +210,8 @@ function initialState() {
     activePatientId: patients[0]?.id || null,
     doctorActivePatientId: patients[0]?.id || null,
 
+    doctorView: "patients", // "patients" | "patient"
+
     // НОВОЕ: кто сейчас сидит в приложении и какой статус у врача
     mode: "patient",          // "patient" | "doctor"
     doctorStatus: "offline",  // "online" | "offline"
@@ -233,6 +235,8 @@ function loadState() {
 
     base = Object.assign(base, saved);
 
+    if (!base.doctorView) base.doctorView = "patients";
+    
         // НОВОЕ: дефолты для новых полей
     if (!base.mode) base.mode = "patient";
     if (!base.doctorStatus) base.doctorStatus = "offline";
@@ -319,11 +323,11 @@ function renderTopBar(activePatient) {
   const modeLabel =
     state.mode === "doctor" ? "Режим: врач" : "Режим: пациент";
   const statusText =
-    state.mode === "doctor"
-      ? ` • Статус врача: ${
-          state.doctorStatus === "online" ? "онлайн" : "оффлайн"
-        }`
-      : "";
+  state.mode === "doctor" && state.page === "doctor"
+    ? ` • Статус врача: ${
+        state.doctorStatus === "online" ? "онлайн" : "оффлайн"
+      }`
+    : "";
 
   return `
     <div class="px-4 pt-4 pb-3 border-b border-gray-200 bg-white">
@@ -831,6 +835,8 @@ function renderDoctor() {
     patients[0] ||
     null;
 
+  const view = state.doctorView || "patients";
+
   const patientsHtml = patients
     .map((p) => {
       const active = selected && p.id === selected.id;
@@ -850,9 +856,38 @@ function renderDoctor() {
     })
     .join("");
 
+  // ✅ Режим 1: список пациентов
+  if (view === "patients") {
+    return `
+      <div class="p-4 space-y-4">
+        <div class="flex items-center justify-between">
+          <button data-action="doctor-exit"
+            class="px-3 py-1.5 rounded-2xl bg-gray-100 text-sm text-gray-800 active:scale-95 transition">
+            ← Выйти
+          </button>
+          <div class="text-right text-xs text-gray-600">
+            Кабинет врача • статус: <b>${state.doctorStatus === "online" ? "онлайн" : "оффлайн"}</b>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-gray-200 p-4">
+          <div class="font-semibold text-gray-900 mb-2">Пациенты</div>
+          <div class="space-y-2">
+            ${patientsHtml}
+          </div>
+          <div class="text-xs text-gray-500 mt-2">
+            Нажмите пациента — откроется семья/анкеты (остальные скроются)
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ✅ Режим 2: выбранный пациент (скрываем остальных)
   const pending = (state.paymentRequests || []).filter(
-    (r) => r.status === "pending"
+    (r) => r.status === "pending" && r.patientId === selected?.id
   );
+
   const reqHtml =
     pending.length === 0
       ? `<div class="text-sm text-gray-600">Нет заявок</div>`
@@ -862,34 +897,26 @@ function renderDoctor() {
             const m = p?.members?.find((x) => x.id === r.memberId);
             const label = r.type === "urgent" ? "Срочная" : "Превентивная";
             return `
-          <div class="bg-gray-50 border border-gray-200 rounded-2xl p-3 text-sm">
-            <div class="font-semibold text-gray-900">
-              ${escapeHtml(p?.name || "Пациент")} • ${label} • ${escapeHtml(
-              m?.name || ""
-            )}
-            </div>
-            <div class="text-xs text-gray-600 mt-0.5">${escapeHtml(
-              p?.phone || ""
-            )}</div>
-            <div class="text-[11px] text-gray-500 mt-0.5">
-              ${new Date(r.createdAt).toLocaleString()}
-            </div>
-            <div class="mt-2 flex gap-2">
-              <button data-action="doctor-confirm-pay" data-id="${
-                r.id
-              }" data-ok="1"
-                class="px-3 py-1.5 rounded-2xl bg-gray-900 text-white text-xs active:scale-95 transition">
-                Подтв.
-              </button>
-              <button data-action="doctor-confirm-pay" data-id="${
-                r.id
-              }" data-ok="0"
-                class="px-3 py-1.5 rounded-2xl bg-gray-100 text-xs active:scale-95 transition">
-                Откл.
-              </button>
-            </div>
-          </div>
-        `;
+              <div class="bg-gray-50 border border-gray-200 rounded-2xl p-3 text-sm">
+                <div class="font-semibold text-gray-900">
+                  ${escapeHtml(p?.name || "Пациент")} • ${label} • ${escapeHtml(m?.name || "")}
+                </div>
+                <div class="text-xs text-gray-600 mt-0.5">${escapeHtml(p?.phone || "")}</div>
+                <div class="text-[11px] text-gray-500 mt-0.5">
+                  ${new Date(r.createdAt).toLocaleString()}
+                </div>
+                <div class="mt-2 flex gap-2">
+                  <button data-action="doctor-confirm-pay" data-id="${r.id}" data-ok="1"
+                    class="px-3 py-1.5 rounded-2xl bg-gray-900 text-white text-xs active:scale-95 transition">
+                    Подтв.
+                  </button>
+                  <button data-action="doctor-confirm-pay" data-id="${r.id}" data-ok="0"
+                    class="px-3 py-1.5 rounded-2xl bg-gray-100 text-xs active:scale-95 transition">
+                    Откл.
+                  </button>
+                </div>
+              </div>
+            `;
           })
           .join("");
 
@@ -902,21 +929,15 @@ function renderDoctor() {
       );
       const ank = m.anketa ? "есть" : "нет";
       return `
-        <button data-action="doctor-open-member" data-member-id="${
-          m.id
-        }" data-patient-id="${selected.id}"
+        <button data-action="doctor-open-member" data-member-id="${m.id}" data-patient-id="${selected.id}"
           class="w-full text-left px-3 py-2 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 active:scale-95 transition">
           <div class="flex justify-between gap-3">
             <div>
               <div class="font-semibold text-gray-900 text-sm">
                 ${escapeHtml(m.name)}
-                <span class="text-xs text-gray-500">
-                  (${escapeHtml(m.relation || "член семьи")})
-                </span>
+                <span class="text-xs text-gray-500">(${escapeHtml(m.relation || "член семьи")})</span>
               </div>
-              <div class="text-xs text-gray-600">${escapeHtml(
-                fmtMemberMeta(m)
-              )}</div>
+              <div class="text-xs text-gray-600">${escapeHtml(fmtMemberMeta(m))}</div>
             </div>
             <div class="text-[11px] text-gray-600 text-right">
               Анкета: <b>${ank}</b><br/>
@@ -931,68 +952,23 @@ function renderDoctor() {
   return `
     <div class="p-4 space-y-4">
       <div class="flex items-center justify-between">
-        <button data-action="doctor-exit"
+        <button data-action="doctor-back-patients"
           class="px-3 py-1.5 rounded-2xl bg-gray-100 text-sm text-gray-800 active:scale-95 transition">
-          ← Выйти
+          ← Все пациенты
         </button>
-        <div class="text-right text-xs text-gray-600">Кабинет врача</div>
-      </div>
-
-      <div class="bg-white rounded-2xl border border-gray-200 p-4">
-        <div class="font-semibold text-gray-900 mb-2">Статус врача</div>
-        <div class="text-xs text-gray-600">
-          Этот статус видят пациенты в чате.
-        </div>
-        <div class="mt-3 flex gap-2">
-          <button
-            data-action="set-doctor-status"
-            data-status="online"
-            class="px-3 py-1.5 rounded-2xl text-xs border ${
-              state.doctorStatus === "online"
-                ? "bg-emerald-500 border-emerald-500 text-white"
-                : "bg-gray-50 border-gray-300 text-gray-800"
-            } active:scale-95 transition"
-          >
-            Онлайн
-          </button>
-          <button
-            data-action="set-doctor-status"
-            data-status="offline"
-            class="px-3 py-1.5 rounded-2xl text-xs border ${
-              state.doctorStatus === "offline"
-                ? "bg-gray-900 border-gray-900 text-white"
-                : "bg-gray-50 border-gray-300 text-gray-800"
-            } active:scale-95 transition"
-          >
-            Оффлайн
-          </button>
-        </div>
-        <div class="mt-2 text-xs text-gray-600">
-          Текущий статус: <b>${
-            state.doctorStatus === "online" ? "онлайн" : "оффлайн"
-          }</b>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-2xl border border-gray-200 p-4">
-        <div class="font-semibold text-gray-900 mb-2">Пациенты</div>
-        <div class="space-y-2">
-          ${patientsHtml}
+        <div class="text-right text-xs text-gray-600">
+          ${escapeHtml(selected?.name || "")} • ${escapeHtml(selected?.phone || "")}
         </div>
       </div>
 
       <div class="bg-white rounded-2xl border border-gray-200 p-4">
         <div class="font-semibold text-gray-900 mb-2">Заявки на оплату</div>
-        <div class="space-y-2">
-          ${reqHtml}
-        </div>
+        <div class="space-y-2">${reqHtml}</div>
       </div>
 
       <div class="bg-white rounded-2xl border border-gray-200 p-4">
         <div class="font-semibold text-gray-900 mb-2">Семья пациента</div>
-        <div class="space-y-2">
-          ${familyHtml}
-        </div>
+        <div class="space-y-2">${familyHtml}</div>
       </div>
     </div>
   `;
@@ -1189,6 +1165,8 @@ function render() {
   if (!app) return;
   const activePatient = getActivePatient();
   const member = getActiveMember();
+  state.doctorStatus =
+  state.mode === "doctor" && state.page === "doctor" ? "online" : "offline";
   app.innerHTML = `
     <div class="min-h-screen flex justify-center items-start sm:items-center bg-gray-100 p-2 sm:p-4">
       <div class="w-full max-w-md rounded-3xl border border-gray-200 bg-white shadow-2xl overflow-hidden flex flex-col">
@@ -1478,11 +1456,6 @@ document.addEventListener("click", function (e) {
       const page = el.dataset.page;
       if (!page) return;
 
-      // если были в кабинете врача и идём в профиль — считаем что выходим из режима врача
-      if (state.page === "doctor" && page === "family") {
-        state.mode = "patient";
-      }
-
       state.page = page;
       if (page === "family" && !getActivePatient() && state.patients[0]) {
         state.activePatientId = state.patients[0].id;
@@ -1542,15 +1515,25 @@ document.addEventListener("click", function (e) {
       state.uiMenuOpen = false;
       render();
       openDoctorLogin();
+      state.doctorView = "patients";
       break;
     case "reset-demo":
       handleResetDemo();
-      break;
+      break; 
+      
     case "doctor-select-patient":
-      state.doctorActivePatientId = el.dataset.patientId;
-      saveState();
-      render();
-      break;
+  state.doctorActivePatientId = el.dataset.patientId;
+  state.doctorView = "patient";
+  saveState();
+  render();
+  break;
+
+      case "doctor-back-patients":
+  state.doctorView = "patients";
+  saveState();
+  render();
+  break;
+      
     case "doctor-open-member": {
       const pid = el.dataset.patientId;
       const mid = el.dataset.memberId;
@@ -1573,29 +1556,15 @@ document.addEventListener("click", function (e) {
       break;
     }
           case "doctor-exit":
-      // явный выход из режима врача
-      state.mode = "patient";
-      state.page = "family";
-      if (!getActivePatient() && state.patients[0]) {
-        state.activePatientId = state.patients[0].id;
-      }
-      saveState();
-      render();
-      showToast("Вы вышли из кабинета врача");
-      break;
-    case "set-doctor-status": {
-      const status = el.dataset.status;
-      if (status !== "online" && status !== "offline") return;
-      state.doctorStatus = status;
-      saveState();
-      render();
-      showToast(
-        status === "online"
-          ? "Статус врача: онлайн"
-          : "Статус врача: оффлайн"
-      );
-      break;
-    }
+  state.mode = "patient";
+  state.page = "family";
+  state.doctorView = "patients";
+  if (!getActivePatient() && state.patients[0]) state.activePatientId = state.patients[0].id;
+  saveState();
+  render();
+  showToast("Вы вышли из кабинета врача");
+  break;
+
   }
 });
 
