@@ -998,10 +998,48 @@ function renderDoctor() {
   `;
 }
 
-  function renderModals(activePatient, member) {
+  function renderPage(activePatient, member) {
+  if (state.page === "home") return renderHome();
+  if (state.page === "family") return renderFamily(activePatient);
+  if (state.page === "member") return renderMember(activePatient, member);
+  if (state.page === "doctor") return renderDoctor();
+  return `<div class="p-4 text-sm text-gray-700">Неизвестная страница</div>`;
+}
+
+function renderBottomNav() {
+  // улучшено: если включён режим врача — кнопка ведёт обратно в кабинет врача
+  const inDoctorMode = state.mode === "doctor";
+
+  let label = "🏠 Главный экран";
+  let target = "home";
+
+  if (inDoctorMode) {
+    if (state.page === "doctor") {
+      label = "👤 В профиль пациента";
+      target = "family";
+    } else {
+      label = "🛡️ Кабинет врача";
+      target = "doctor";
+    }
+  } else {
+    const onHome = state.page === "home";
+    label = onHome ? "👤 Мой профиль" : "🏠 Главный экран";
+    target = onHome ? "family" : "home";
+  }
+
+  return `
+    <div class="border-t border-gray-200 bg-white px-4 py-3">
+      <button data-action="go-page" data-page="${target}"
+        class="w-full rounded-2xl bg-gray-900 text-white text-sm py-3 active:scale-95 transition">
+        ${label}
+      </button>
+    </div>
+  `;
+}
+
+function renderModals(activePatient, member) {
   let html = "";
 
-  // Модалка добавления члена семьи
   if (state.uiAddMemberOpen) {
     html += `
       <div class="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black bg-opacity-40">
@@ -1059,7 +1097,6 @@ function renderDoctor() {
     `;
   }
 
-  // Модалка мини-анкеты
   if (state.uiAnketaOpen && member) {
     const goal = member.anketa?.goal || "";
     const comp = member.anketa?.complaints || "";
@@ -1069,9 +1106,7 @@ function renderDoctor() {
           <div class="flex items-center justify-between mb-1">
             <div>
               <div class="font-semibold text-gray-900">Анкета (мини)</div>
-              <div class="text-xs text-gray-500">Тип: ${escapeHtml(
-                formTypeFor(member.dob)
-              )}</div>
+              <div class="text-xs text-gray-500">Тип: ${escapeHtml(formTypeFor(member.dob))}</div>
             </div>
             <button data-action="close-modal" data-modal="anketa"
               class="px-2 py-1 rounded-xl bg-gray-100">✕</button>
@@ -1080,16 +1115,12 @@ function renderDoctor() {
             <div>
               <div class="text-xs text-gray-500">Цель</div>
               <textarea id="anketaGoal" rows="3"
-                class="mt-1 w-full rounded-2xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm">${escapeHtml(
-                  goal
-                )}</textarea>
+                class="mt-1 w-full rounded-2xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm">${escapeHtml(goal)}</textarea>
             </div>
             <div>
               <div class="text-xs text-gray-500">Жалобы</div>
               <textarea id="anketaComplaints" rows="3"
-                class="mt-1 w-full rounded-2xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm">${escapeHtml(
-                  comp
-                )}</textarea>
+                class="mt-1 w-full rounded-2xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm">${escapeHtml(comp)}</textarea>
             </div>
           </div>
           <button data-action="save-anketa"
@@ -1101,7 +1132,6 @@ function renderDoctor() {
     `;
   }
 
-  // Боковое меню
   if (state.uiMenuOpen) {
     html += `
       <div class="fixed inset-0 z-30 flex items-end sm:items-center justify-center bg-black bg-opacity-40">
@@ -1111,6 +1141,14 @@ function renderDoctor() {
             <button data-action="close-modal" data-modal="menu"
               class="px-2 py-1 rounded-xl bg-gray-100">✕</button>
           </div>
+
+          ${state.mode === "doctor" ? `
+            <button data-action="doctor-exit"
+              class="w-full text-left px-3 py-2 rounded-2xl bg-gray-100 text-sm active:scale-95 transition">
+              ↩ Выйти из кабинета врача
+            </button>
+          ` : ""}
+
           <button data-action="go-page" data-page="home"
             class="w-full text-left px-3 py-2 rounded-2xl bg-gray-100 text-sm active:scale-95 transition">
             🏠 Главный экран
