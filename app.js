@@ -596,16 +596,162 @@ function renderMemberTabsHTML(member) {
     )
     .join("");
 
+    const workflow = member.workflow || {};
+  const labsCount = Object.values(member.labs || {}).reduce(
+    (acc, arr) => acc + (arr?.length || 0),
+    0
+  );
+  const consultStatuses = [
+    member.consult?.urgent,
+    member.consult?.prev,
+  ].filter((x) => x && x !== "none");
+  const consultText = consultStatuses.length
+    ? consultStatuses.join(" • ")
+    : "Нет";
+
   let contentHTML = "";
 
-  if (state.memberTab === "chat") {
+    if (state.memberTab === "chat") {
     contentHTML = renderMemberChatHTML(member);
   } else if (state.memberTab === "overview") {
     contentHTML = `
-      <div class="rounded-3xl border border-black/10 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)] p-4">
-        <div class="text-sm text-slate-700">
-          Здесь будет подробный обзор (анализы, анкета, статус консультаций).
-          Его можно перенести из React-кода по тому же принципу, как мы сделали с чатом.
+      <div class="space-y-3">
+        <!-- Карточка-резюме -->
+        <div class="rounded-3xl border border-black/10 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)] p-4">
+          <div class="grid grid-cols-2 gap-3 text-sm">
+            <div class="rounded-2xl border border-black/10 bg-slate-50 p-3">
+              <div class="text-xs text-slate-500">Анкета</div>
+              <div class="mt-1 font-semibold text-slate-900">
+                ${member.anketa ? "Заполнена" : "Не заполнена"}
+              </div>
+            </div>
+            <div class="rounded-2xl border border-black/10 bg-slate-50 p-3">
+              <div class="text-xs text-slate-500">Анализы</div>
+              <div class="mt-1 font-semibold text-slate-900">
+                ${labsCount || "Нет"} файл(ов)
+              </div>
+            </div>
+            <div class="rounded-2xl border border-black/10 bg-slate-50 p-3">
+              <div class="text-xs text-slate-500">Консультации</div>
+              <div class="mt-1 font-semibold text-slate-900">
+                ${consultText}
+              </div>
+            </div>
+            <div class="rounded-2xl border border-black/10 bg-slate-50 p-3">
+              <div class="text-xs text-slate-500">Тип анкеты</div>
+              <div class="mt-1 font-semibold text-slate-900">
+                ${formTypeFor(member.dob)}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ход консультации -->
+        <div class="rounded-3xl border border-black/10 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)] p-4">
+          <div class="font-semibold text-slate-900 mb-2">
+            Ход консультации
+          </div>
+          <div class="space-y-2 text-sm">
+            <!-- Предоплата -->
+            <div class="flex items-center justify-between">
+              <span>Предоплата</span>
+              <span class="text-slate-900">
+                ${
+                  workflow.prepaymentStatus === "confirmed"
+                    ? "подтверждена"
+                    : workflow.prepaymentStatus === "pending"
+                    ? "ожидает подтверждения"
+                    : "не отмечена"
+                }
+              </span>
+            </div>
+
+            <!-- Карточка на Google Диске -->
+            ${
+              workflow.cardLink
+                ? `
+            <div class="flex items-center justify-between gap-2">
+              <span>Карточка в Google Диске</span>
+              <a href="${workflow.cardLink}" target="_blank" rel="noopener noreferrer"
+                class="text-xs text-sky-600 underline">
+                Открыть
+              </a>
+            </div>`
+                : `
+            <div class="text-xs text-slate-500">
+              Ссылка на карточку появится после того, как врач её создаст.
+            </div>`
+            }
+
+            <!-- Анкета в Google Диске -->
+            <div class="flex items-center justify-between">
+              <span>Анкета в Google Диске</span>
+              <span class="text-slate-900">
+                ${workflow.anketaExternalDone ? "заполнена" : "ожидает"}
+              </span>
+            </div>
+
+            <button data-action="patient-mark-external-anketa"
+              class="mt-1 w-full rounded-2xl px-4 py-2 text-xs active:scale-95 transition ${
+                workflow.cardLink
+                  ? "bg-black/5 hover:bg-black/10 text-slate-900"
+                  : "bg-slate-100 text-slate-400 cursor-not-allowed"
+              }"
+              ${workflow.cardLink ? "" : "disabled"}
+            >
+              Я заполнил(а) анкету в Google Диске
+            </button>
+
+            <!-- Дата консультации -->
+            <div class="flex items-center justify-between mt-2">
+              <span>Дата консультации</span>
+              <span class="text-slate-900">
+                ${workflow.appointmentDate || "не выбрана"}
+              </span>
+            </div>
+            <button data-action="patient-set-appointment"
+              class="mt-1 w-full rounded-2xl px-4 py-2 text-xs active:scale-95 transition bg-black/5 hover:bg-black/10 text-slate-900">
+              Выбрать / изменить дату
+            </button>
+
+            <!-- Список анализов от врача -->
+            ${
+              workflow.analysesList
+                ? `
+            <div class="mt-2 rounded-2xl border border-black/10 bg-slate-50 p-2 text-xs">
+              <div class="text-slate-500 mb-1">
+                Список анализов от врача:
+              </div>
+              <div class="text-slate-900 whitespace-pre-wrap">
+                ${workflow.analysesList}
+              </div>
+            </div>`
+                : `
+            <div class="mt-2 text-xs text-slate-500">
+              Список анализов появится после изучения анкеты врачом.
+            </div>`
+            }
+
+            <!-- Анализы загружены -->
+            <div class="flex items-center justify-between mt-2">
+              <span>Анализы загружены</span>
+              <span class="text-slate-900">
+                ${workflow.analysesUploaded ? "да" : "ещё нет"}
+              </span>
+            </div>
+
+            <!-- Схема лечения -->
+            <div class="flex items-center justify-between mt-2">
+              <span>Схема лечения</span>
+              <span class="text-slate-900">
+                ${
+                  workflow.treatmentReady
+                    ? "готова (в карточке на диске)"
+                    : "ещё готовится"
+                }
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -954,6 +1100,107 @@ document.addEventListener("click", (e) => {
     return;
   }
 
+    if (action === "patient-mark-external-anketa") {
+    const p = getActivePatient();
+    const m = getActiveMember();
+    if (!p || !m) return;
+
+    const workflow = m.workflow || {};
+    if (!workflow.cardLink) {
+      showToast("Сначала врач создаст карточку на диске");
+      return;
+    }
+
+    const patients = state.patients.map((pp) => {
+      if (pp.id !== p.id) return pp;
+      const members = pp.members.map((mm) => {
+        if (mm.id !== m.id) return mm;
+        const w = { ...(mm.workflow || {}) };
+        w.anketaExternalDone = true;
+        w.anketaExternalDoneAt = new Date().toISOString();
+        return {
+          ...mm,
+          workflow: w,
+          chats: [
+            ...(mm.chats || []),
+            {
+              from: "patient",
+              text: "Я заполнил(а) анкету в Google Диске ✅",
+              ts: Date.now(),
+            },
+          ],
+        };
+      });
+      return { ...pp, members };
+    });
+
+    const notif = {
+      id: uid("n"),
+      title: "Анкета заполнена",
+      body: `${p.name} (${p.phone}) • ${m.name}`,
+      createdAt: new Date().toISOString(),
+      unread: true,
+    };
+
+    setState({
+      patients,
+      notifications: [notif, ...state.notifications],
+    });
+    showToast("Отметили заполнение анкеты");
+    return;
+  }
+
+  if (action === "patient-set-appointment") {
+    const p = getActivePatient();
+    const m = getActiveMember();
+    if (!p || !m) return;
+
+    const current = m.workflow?.appointmentDate || "";
+    const val = prompt(
+      "Введите дату и время консультации (например: 2025-02-01 14:00)",
+      current
+    );
+    if (!val) return;
+
+    const patients = state.patients.map((pp) => {
+      if (pp.id !== p.id) return pp;
+      const members = pp.members.map((mm) => {
+        if (mm.id !== m.id) return mm;
+        const w = { ...(mm.workflow || {}) };
+        w.appointmentDate = val;
+        w.appointmentSetAt = new Date().toISOString();
+        return {
+          ...mm,
+          workflow: w,
+          chats: [
+            ...(mm.chats || []),
+            {
+              from: "patient",
+              text: `Выбрал(а) дату консультации: ${val}`,
+              ts: Date.now(),
+            },
+          ],
+        };
+      });
+      return { ...pp, members };
+    });
+
+    const notif = {
+      id: uid("n"),
+      title: "Выбрана дата консультации",
+      body: `${p.name} (${p.phone}) • ${m.name} • ${val}`,
+      createdAt: new Date().toISOString(),
+      unread: true,
+    };
+
+    setState({
+      patients,
+      notifications: [notif, ...state.notifications],
+    });
+    showToast("Дата консультации сохранена");
+    return;
+  }
+  
   if (action === "open-lab") {
     const cat = btn.dataset.cat;
     const p = getActivePatient();
