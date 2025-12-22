@@ -222,6 +222,7 @@ function initialState() {
     uiAddMemberOpen: false,
     uiAnketaOpen: false,
     uiMenuOpen: false,
+    uiRegisterOpen: false,
   };
 }
 
@@ -264,6 +265,7 @@ function loadState() {
     base.uiAddMemberOpen = false;
     base.uiAnketaOpen = false;
     base.uiMenuOpen = false;
+    base.uiRegisterOpen = false;
 
     return base;
   } catch (e) {
@@ -279,6 +281,7 @@ function saveState() {
       uiAddMemberOpen,
       uiAnketaOpen,
       uiMenuOpen,
+       uiRegisterOpen, // ✅ добавь
       ...rest
     } = state;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(rest));
@@ -513,6 +516,12 @@ function renderFamily(activePatient) {
             class="px-3 py-2 rounded-2xl bg-gray-900 text-white text-xs active:scale-95 transition">
             + Добавить
           </button>
+          ${state.mode !== "doctor" ? `
+  <button data-action="delete-account"
+    class="px-3 py-2 rounded-2xl bg-red-50 text-red-700 text-xs active:scale-95 transition">
+    Удалить аккаунт
+  </button>
+` : ""}
         </div>
       </div>
       <div class="space-y-3">
@@ -579,11 +588,22 @@ function renderMemberAnketa(member) {
           <div class="font-semibold text-gray-900">Анкета</div>
           <div class="text-sm text-gray-600 mt-1">${escapeHtml(updated)}</div>
         </div>
-        <button data-action="open-anketa"
-          class="px-3 py-1.5 rounded-2xl bg-gray-900 text-white text-xs active:scale-95 transition">
-          ${member.anketa ? "Обновить" : "Заполнить"}
-        </button>
-      </div>
+        <div class="flex gap-2">
+  <button data-action="open-anketa"
+    class="px-3 py-1.5 rounded-2xl bg-gray-900 text-white text-xs active:scale-95 transition">
+    ${member.anketa ? "Обновить" : "Заполнить"}
+  </button>
+
+  ${
+    member.anketa && state.mode === "patient"
+      ? `<button data-action="delete-anketa"
+          class="px-3 py-1.5 rounded-2xl bg-red-50 text-red-700 text-xs active:scale-95 transition">
+          Удалить
+        </button>`
+      : ""
+  }
+</div>
+</div>
 
       <div class="space-y-3 text-sm">
         <div>
@@ -802,12 +822,18 @@ function renderMember(activePatient, member) {
     content = renderMemberConsult(activePatient, member);
 
   return `
-    <div class="p-4 space-y-4">
-      <div class="flex items-center justify-between">
-        <button data-action="go-page" data-page="family"
+    <div class="flex items-center justify-between">
+  ${
+    state.mode === "doctor"
+      ? `<button data-action="doctor-back-to-patient"
+          class="px-3 py-1.5 rounded-2xl bg-gray-100 text-sm text-gray-800 active:scale-95 transition">
+          ← Назад
+        </button>`
+      : `<button data-action="go-page" data-page="family"
           class="px-3 py-1.5 rounded-2xl bg-gray-100 text-sm text-gray-800 active:scale-95 transition">
           ← Профиль
-        </button>
+        </button>`
+  }
         <div class="text-right">
           <div class="font-semibold text-gray-900 text-sm">
             ${escapeHtml(member.name)}
@@ -1015,7 +1041,43 @@ function renderBottomNav() {
 
 function renderModals(activePatient, member) {
   let html = "";
+  if (state.uiRegisterOpen) {
+  html += `
+    <div class="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black bg-opacity-40">
+      <div class="bg-white rounded-3xl w-full max-w-md mx-4 mb-4 sm:mb-0 p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="font-semibold text-gray-900">Регистрация</div>
+            <div class="text-xs text-gray-500">Пока без SMS. Позже добавим код по номеру.</div>
+          </div>
+          <button data-action="close-modal" data-modal="register"
+            class="px-2 py-1 rounded-xl bg-gray-100">✕</button>
+        </div>
 
+        <div class="space-y-3 text-sm">
+          <div>
+            <div class="text-xs text-gray-500">ФИО</div>
+            <input id="regName" type="text"
+              class="mt-1 w-full rounded-2xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm"
+              placeholder="Иван Иванов" />
+          </div>
+          <div>
+            <div class="text-xs text-gray-500">Телефон</div>
+            <input id="regPhone" type="tel"
+              class="mt-1 w-full rounded-2xl border border-gray-300 bg-gray-50 px-3 py-2 text-sm"
+              placeholder="+79990000000" />
+          </div>
+        </div>
+
+        <button data-action="save-register"
+          class="w-full mt-2 rounded-2xl bg-gray-900 text-white text-sm py-2.5 active:scale-95 transition">
+          Создать профиль
+        </button>
+      </div>
+    </div>
+  `;
+}
+  
   if (state.uiAddMemberOpen) {
     html += `
       <div class="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black bg-opacity-40">
@@ -1213,6 +1275,74 @@ function handleSaveAddMember() {
   saveState();
   render();
   showToast("Член семьи добавлен");
+}
+
+function handleSaveRegister() {
+  const nameEl = document.getElementById("regName");
+  const phoneEl = document.getElementById("regPhone");
+  if (!nameEl || !phoneEl) return;
+
+  const name = nameEl.value.trim();
+  const phone = phoneEl.value.trim();
+
+  if (!name || !phone) {
+    showToast("Введите ФИО и телефон");
+    return;
+  }
+
+  const p = {
+    id: uid("p"),
+    name,
+    phone,
+    createdAt: new Date().toISOString(),
+    members: [],
+    selectedMemberId: null,
+  };
+
+  state.patients = [p];
+  state.activePatientId = p.id;
+  state.doctorActivePatientId = p.id;
+
+  state.uiRegisterOpen = false;
+  state.page = "family";
+
+  saveState();
+  render();
+  showToast("Профиль создан");
+}
+
+function handleDeleteAccount() {
+  const ok = window.confirm("Удалить аккаунт пациента полностью? (члены семьи и анкеты тоже удалятся)");
+  if (!ok) return;
+
+  state.patients = [];
+  state.activePatientId = null;
+  state.doctorActivePatientId = null;
+
+  state.page = "home";
+  state.memberTab = "overview";
+
+  state.uiAddMemberOpen = false;
+  state.uiAnketaOpen = false;
+  state.uiMenuOpen = false;
+  state.uiRegisterOpen = false;
+
+  saveState();
+  render();
+  showToast("Аккаунт удалён");
+}
+
+function handleDeleteAnketa() {
+  const m = getActiveMember();
+  if (!m) return;
+
+  const ok = window.confirm("Удалить анкету? Данные анкеты будут очищены.");
+  if (!ok) return;
+
+  m.anketa = null;
+  saveState();
+  render();
+  showToast("Анкета удалена");
 }
 
 function handleSaveAnketa() {
@@ -1456,6 +1586,14 @@ document.addEventListener("click", function (e) {
       const page = el.dataset.page;
       if (!page) return;
 
+      // если профиля нет — вместо перехода в "family" открываем регистрацию
+if (page === "family" && state.mode !== "doctor" && !getActivePatient()) {
+  state.uiRegisterOpen = true;
+  render();
+  showToast("Создайте профиль (регистрация)");
+  break;
+}
+      
       state.page = page;
       if (page === "family" && !getActivePatient() && state.patients[0]) {
         state.activePatientId = state.patients[0].id;
@@ -1473,11 +1611,15 @@ document.addEventListener("click", function (e) {
       if (modal === "add-member") state.uiAddMemberOpen = false;
       else if (modal === "anketa") state.uiAnketaOpen = false;
       else if (modal === "menu") state.uiMenuOpen = false;
+      else if (modal === "register") state.uiRegisterOpen = false;
       render();
       break;
     }
     case "save-add-member":
       handleSaveAddMember();
+      break;
+   case "save-register":
+      handleSaveRegister();
       break;
     case "select-member":
       handleSelectMember(el.dataset.memberId);
@@ -1489,6 +1631,9 @@ document.addEventListener("click", function (e) {
       state.uiAnketaOpen = true;
       render();
       break;
+      case "delete-anketa":
+  handleDeleteAnketa();
+  break;
     case "save-anketa":
       handleSaveAnketa();
       break;
@@ -1513,13 +1658,14 @@ document.addEventListener("click", function (e) {
       break;
     case "open-doctor-login":
       state.uiMenuOpen = false;
+      state.doctorView = "patients"; // ✅ ДО openDoctorLogin
       render();
-      openDoctorLogin();
-      state.doctorView = "patients";
-      break;
     case "reset-demo":
       handleResetDemo();
-      break; 
+      break;
+      case "delete-account":
+  handleDeleteAccount();
+  break;
       
     case "doctor-select-patient":
   state.doctorActivePatientId = el.dataset.patientId;
@@ -1530,6 +1676,13 @@ document.addEventListener("click", function (e) {
 
       case "doctor-back-patients":
   state.doctorView = "patients";
+  saveState();
+  render();
+  break;
+
+      case "doctor-back-to-patient":
+  state.page = "doctor";
+  state.doctorView = "patient";
   saveState();
   render();
   break;
