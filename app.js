@@ -512,10 +512,13 @@ function renderFamily(activePatient) {
               Внутри — члены семьи и их анкеты
             </div>
           </div>
-          <button data-action="open-add-member"
-            class="px-3 py-2 rounded-2xl bg-gray-900 text-white text-xs active:scale-95 transition">
-            + Добавить
-          </button>
+          ${state.mode !== "doctor" ? `
+  ${state.mode !== "doctor" ? `
+  <button data-action="open-add-member"
+    class="px-3 py-2 rounded-2xl bg-gray-900 text-white text-xs active:scale-95 transition">
+    + Добавить
+  </button>
+` : ""}
           ${state.mode !== "doctor" ? `
   <button data-action="delete-account"
     class="px-3 py-2 rounded-2xl bg-red-50 text-red-700 text-xs active:scale-95 transition">
@@ -588,21 +591,33 @@ function renderMemberAnketa(member) {
           <div class="font-semibold text-gray-900">Анкета</div>
           <div class="text-sm text-gray-600 mt-1">${escapeHtml(updated)}</div>
         </div>
-        <div class="flex gap-2">
-  <button data-action="open-anketa"
-    class="px-3 py-1.5 rounded-2xl bg-gray-900 text-white text-xs active:scale-95 transition">
-    ${member.anketa ? "Обновить" : "Заполнить"}
-  </button>
 
-  ${
-    member.anketa && state.mode === "patient"
-      ? `<button data-action="delete-anketa"
-          class="px-3 py-1.5 rounded-2xl bg-red-50 text-red-700 text-xs active:scale-95 transition">
-          Удалить
-        </button>`
-      : ""
-  }
-</div>
+        <div class="flex gap-2">
+          ${
+            state.mode === "patient"
+              ? `
+                <button data-action="open-anketa"
+                  class="px-3 py-1.5 rounded-2xl bg-gray-900 text-white text-xs active:scale-95 transition">
+                  ${member.anketa ? "Обновить" : "Заполнить"}
+                </button>
+
+                ${
+                  member.anketa
+                    ? `<button data-action="delete-anketa"
+                        class="px-3 py-1.5 rounded-2xl bg-red-50 text-red-700 text-xs active:scale-95 transition">
+                        Удалить
+                      </button>`
+                    : ""
+                }
+              `
+              : `
+                <div class="px-3 py-1.5 rounded-2xl bg-gray-100 text-xs text-gray-700">
+                  Только просмотр
+                </div>
+              `
+          }
+        </div>
+        
 </div>
 
       <div class="space-y-3 text-sm">
@@ -707,6 +722,7 @@ function renderMemberChat(member) {
 function renderMemberConsult(activePatient, member) {
   const urgentStatus = member.consult?.urgent || "none";
   const prevStatus = member.consult?.prev || "none";
+  const isPatient = state.mode === "patient";
 
   function statusLabel(st) {
     if (st === "none") return "нет";
@@ -737,19 +753,6 @@ function renderMemberConsult(activePatient, member) {
         <div class="text-xs text-gray-600 mt-1">
           Комментарий: <b>${escapeHtml(baseUrgent)}</b>
         </div>
-        <div class="mt-3 grid grid-cols-2 gap-2">
-          <button data-action="copy-text" data-text="${escapeAttr(
-            baseUrgent
-          )}"
-            class="px-3 py-2 rounded-2xl bg-gray-100 text-sm active:scale-95 transition">
-            Скопировать
-          </button>
-          <button data-action="consult-pay" data-type="urgent"
-            class="px-3 py-2 rounded-2xl bg-gray-900 text-white text-sm active:scale-95 transition">
-            Оплачено
-          </button>
-        </div>
-      </div>
 
       <div class="bg-white rounded-2xl border border-gray-200 p-4 text-sm">
         <div class="flex items-start justify-between gap-3">
@@ -767,18 +770,57 @@ function renderMemberConsult(activePatient, member) {
         <div class="text-xs text-gray-600 mt-1">
           Комментарий: <b>${escapeHtml(basePrev)}</b>
         </div>
-        <div class="mt-3 grid grid-cols-2 gap-2">
-          <button data-action="copy-text" data-text="${escapeAttr(
-            basePrev
-          )}"
-            class="px-3 py-2 rounded-2xl bg-gray-100 text-sm active:scale-95 transition">
-            Скопировать
-          </button>
-          <button data-action="consult-pay" data-type="prev"
-            class="px-3 py-2 rounded-2xl bg-gray-900 text-white text-sm active:scale-95 transition">
-            Оплачено
-          </button>
+                ${
+          isPatient
+            ? `
+                ${
+          isPatient
+            ? `
+                ${
+          state.mode === "patient"
+            ? `
+                      ${
+          state.mode === "patient"
+            ? `
+              <div class="mt-3 grid grid-cols-2 gap-2">
+                <button data-action="copy-text" data-text="${escapeAttr(basePrev)}"
+                  class="px-3 py-2 rounded-2xl bg-gray-100 text-sm active:scale-95 transition">
+                  Скопировать
+                </button>
+                <button data-action="consult-pay" data-type="prev"
+                  class="px-3 py-2 rounded-2xl bg-gray-900 text-white text-sm active:scale-95 transition">
+                  Оплачено
+                </button>
+              </div>
+            `
+            : `
+              <div class="mt-3 text-xs text-gray-500">
+                В режиме врача здесь только просмотр. Подтверждение оплаты — в разделе «Заявки на оплату».
+              </div>
+            `
+        }
+            `
+            : `
+              <div class="mt-3 text-xs text-gray-500">
+                В режиме врача здесь только просмотр. Подтверждение оплаты — в разделе «Заявки на оплату».
+              </div>
+            `
+        }
+            `
+            : `
+        <div class="mt-3 text-xs text-gray-500">
+          Оплата отмечается пациентом. Врач подтверждает заявки в кабинете врача.
         </div>
+            `
+        }
+
+            `
+            : `
+        <div class="mt-3 text-xs text-gray-500">
+          Оплата отмечается пациентом. Врач подтверждает заявки в кабинете врача.
+        </div>
+            `
+        }
       </div>
     </div>
   `;
@@ -1199,10 +1241,12 @@ function renderModals(activePatient, member) {
             class="w-full text-left px-3 py-2 rounded-2xl bg-gray-100 text-sm active:scale-95 transition">
             🛡️ Вход врача (PIN)
           </button>
-          <button data-action="reset-demo"
-            class="w-full text-left px-3 py-2 rounded-2xl bg-red-50 text-sm text-red-700 active:scale-95 transition">
-            ↺ Сбросить демо-данные
-          </button>
+          ${state.mode === "patient" ? `
+  <button data-action="reset-demo"
+    class="w-full text-left px-3 py-2 rounded-2xl bg-red-50 text-sm text-red-700 active:scale-95 transition">
+    ↺ Сбросить демо-данные
+  </button>
+` : ""}
         </div>
       </div>
     `;
@@ -1246,6 +1290,15 @@ function render() {
 
 // === Логика действий ===
 function handleSaveAddMember() {
+    if (state.mode !== "patient") {
+    showToast("Добавлять членов семьи может только пациент");
+    return;
+  }
+
+    if (state.mode === "doctor") {
+    showToast("Добавление доступно только пациенту");
+    return;
+  }
   const relationEl = document.getElementById("addRelation");
   const nameEl = document.getElementById("addName");
   const dobEl = document.getElementById("addDob");
@@ -1278,6 +1331,10 @@ function handleSaveAddMember() {
 }
 
 function handleSaveRegister() {
+    if (state.mode !== "patient") {
+    showToast("Регистрация доступна только пациенту");
+    return;
+  }
   const nameEl = document.getElementById("regName");
   const phoneEl = document.getElementById("regPhone");
   if (!nameEl || !phoneEl) return;
@@ -1312,6 +1369,10 @@ function handleSaveRegister() {
 }
 
 function handleDeleteAccount() {
+    if (state.mode !== "patient") {
+    showToast("Удалять аккаунт может только пациент");
+    return;
+  }
   const ok = window.confirm("Удалить аккаунт пациента полностью? (члены семьи и анкеты тоже удалятся)");
   if (!ok) return;
 
@@ -1333,6 +1394,10 @@ function handleDeleteAccount() {
 }
 
 function handleDeleteAnketa() {
+    if (state.mode !== "patient") {
+    showToast("Удаление анкеты доступно только пациенту");
+    return;
+  }
   const m = getActiveMember();
   if (!m) return;
 
@@ -1346,6 +1411,10 @@ function handleDeleteAnketa() {
 }
 
 function handleSaveAnketa() {
+    if (state.mode !== "patient") {
+    showToast("Анкету может заполнять только пациент");
+    return;
+  }
   const goalEl = document.getElementById("anketaGoal");
   const compEl = document.getElementById("anketaComplaints");
   if (!goalEl || !compEl) return;
@@ -1418,6 +1487,10 @@ function handleChatSend() {
 }
 
 function handleConsultPay(type) {
+    if (state.mode !== "patient") {
+    showToast("Отметить оплату может только пациент");
+    return;
+  }
   const member = getActiveMember();
   const patient = getActivePatient();
   if (!member || !patient) return;
@@ -1464,6 +1537,10 @@ function handleConsultPay(type) {
 }
 
 function handleDoctorConfirmPay(id, ok) {
+    if (state.mode !== "doctor") {
+    showToast("Доступно только врачу");
+    return;
+  }
   const r = (state.paymentRequests || []).find((x) => x.id === id);
   if (!r || r.status !== "pending") return;
 
@@ -1551,6 +1628,10 @@ function handleBrandTap() {
 }
 
 function handleResetDemo() {
+    if (state.mode !== "patient") {
+    showToast("Сброс доступен только пациенту");
+    return;
+  }
   try {
     window.localStorage.removeItem(STORAGE_KEY);
   } catch (e) {}
@@ -1582,6 +1663,10 @@ document.addEventListener("click", function (e) {
   const action = el.dataset.action;
 
   switch (action) {
+      case "reset-demo":
+  if (state.mode !== "patient") { showToast("Только пациент"); break; }
+  handleResetDemo();
+  break;
     case "go-page": {
       const page = el.dataset.page;
       if (!page) return;
@@ -1603,9 +1688,14 @@ if (page === "family" && state.mode !== "doctor" && !getActivePatient()) {
       break;
     }
     case "open-add-member":
-      state.uiAddMemberOpen = true;
-      render();
-      break;
+  if (state.mode !== "patient") { showToast("Только пациент"); break; }
+  state.uiAddMemberOpen = true;
+  render();
+  break;
+  }
+  state.uiAddMemberOpen = true;
+  render();
+  break;
     case "close-modal": {
       const modal = el.dataset.modal;
       if (modal === "add-member") state.uiAddMemberOpen = false;
@@ -1616,8 +1706,9 @@ if (page === "family" && state.mode !== "doctor" && !getActivePatient()) {
       break;
     }
     case "save-add-member":
-      handleSaveAddMember();
-      break;
+  if (state.mode !== "patient") { showToast("Только пациент"); break; }
+  handleSaveAddMember();
+  break;
    case "save-register":
       handleSaveRegister();
       break;
@@ -1628,21 +1719,32 @@ if (page === "family" && state.mode !== "doctor" && !getActivePatient()) {
       handleChangeMemberTab(el.dataset.tab);
       break;
     case "open-anketa":
-      state.uiAnketaOpen = true;
-      render();
-      break;
+  if (state.mode !== "patient") { showToast("Только пациент"); break; }
+  state.uiAnketaOpen = true;
+  render();
+  break;
+  }
+  state.uiAnketaOpen = true;
+  render();
+  break;
       case "delete-anketa":
+  if (state.mode !== "patient") { showToast("Только пациент"); break; }
   handleDeleteAnketa();
   break;
     case "save-anketa":
-      handleSaveAnketa();
-      break;
+  if (state.mode !== "patient") { showToast("Только пациент"); break; }
+  handleSaveAnketa();
+  break;
     case "chat-send":
       handleChatSend();
       break;
     case "consult-pay":
-      handleConsultPay(el.dataset.type);
-      break;
+  if (state.mode !== "patient") {
+    showToast("Оплата отмечается только пациентом");
+    break;
+  }
+  handleConsultPay(el.dataset.type);
+  break;
     case "copy-text":
       handleCopyText(el.dataset.text || "");
       break;
@@ -1657,17 +1759,18 @@ if (page === "family" && state.mode !== "doctor" && !getActivePatient()) {
       render();
       break;
     case "open-doctor-login":
-      state.uiMenuOpen = false;
-      state.doctorView = "patients"; // ✅ ДО openDoctorLogin
-      render();
-    case "reset-demo":
-      handleResetDemo();
-      break;
+  state.uiMenuOpen = false;
+  state.doctorView = "patients";
+  render();
+  openDoctorLogin();
+  break;
       case "delete-account":
+  if (state.mode !== "patient") { showToast("Только пациент"); break; }
   handleDeleteAccount();
   break;
       
     case "doctor-select-patient":
+  if (state.mode !== "doctor") { showToast("Только врач"); break; }
   state.doctorActivePatientId = el.dataset.patientId;
   state.doctorView = "patient";
   saveState();
@@ -1675,19 +1778,23 @@ if (page === "family" && state.mode !== "doctor" && !getActivePatient()) {
   break;
 
       case "doctor-back-patients":
+  if (state.mode !== "doctor") { showToast("Только врач"); break; }
   state.doctorView = "patients";
   saveState();
   render();
   break;
 
       case "doctor-back-to-patient":
+  if (state.mode !== "doctor") { showToast("Только врач"); break; }
   state.page = "doctor";
   state.doctorView = "patient";
   saveState();
   render();
   break;
+
       
-    case "doctor-open-member": {
+          case "doctor-open-member": {
+      if (state.mode !== "doctor") { showToast("Только врач"); break; }
       const pid = el.dataset.patientId;
       const mid = el.dataset.memberId;
       const p = (state.patients || []).find((pp) => pp.id === pid);
@@ -1703,12 +1810,14 @@ if (page === "family" && state.mode !== "doctor" && !getActivePatient()) {
       break;
     }
     case "doctor-confirm-pay": {
+      if (state.mode !== "doctor") { showToast("Только врач"); break; }
       const id = el.dataset.id;
       const ok = el.dataset.ok === "1";
       handleDoctorConfirmPay(id, ok);
       break;
     }
           case "doctor-exit":
+  if (state.mode !== "doctor") { showToast("Только врач"); break; }
   state.mode = "patient";
   state.page = "family";
   state.doctorView = "patients";
