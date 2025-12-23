@@ -1,36 +1,90 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
-  <head>
-    <meta charset="utf-8" />
-    <title>PREVENTIVE Family PWA — light</title>
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
-    />
-    <!-- TailwindCSS через CDN -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-    />
-   <style>
-  html,
-  body {
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    padding: 0;
-    background: #f3f4f6;
-  }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>PREVENTIVE Family PWA 2.0</title>
 
-  /* Контейнер приложения растягиваем минимум на высоту экрана,
-     но НЕ фиксируем высоту, чтобы страница могла прокручиваться */
-  #app {
-    min-height: 100vh;
-  }
-</style>
-  </head>
-  <body class="bg-gray-100">
-    <div id="app"></div>
-    <script src="./app.js"></script>
-  </body>
+  <!-- TailwindCSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.1/dist/tailwind.min.css" rel="stylesheet" />
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #f9fafb;
+      font-family: 'Inter', sans-serif;
+    }
+    /* Анимации для модалок и тостов */
+    .fade-in {
+      animation: fadeIn 0.3s ease forwards;
+    }
+    .fade-out {
+      animation: fadeOut 0.3s ease forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; transform: scale(1); }
+      to { opacity: 0; transform: scale(0.95); }
+    }
+
+    /* Стили для горизонтальных каруселей */
+    .carousel {
+      display: flex;
+      overflow-x: auto;
+      gap: 0.75rem;
+      scroll-behavior: smooth;
+      padding-bottom: 4px;
+    }
+    .carousel::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Подсказки */
+    [data-tooltip] {
+      position: relative;
+      cursor: pointer;
+    }
+    [data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 120%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #000;
+      color: #fff;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      white-space: nowrap;
+      opacity: 0.9;
+    }
+
+    /* PWA адаптация */
+    #app {
+      min-height: 100vh;
+      max-width: 420px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      background-color: #fff;
+      border-left: 1px solid #e5e7eb;
+      border-right: 1px solid #e5e7eb;
+      box-shadow: 0 0 30px rgba(0,0,0,0.05);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <!-- Всё приложение рендерится через app.js -->
+  </div>
+
+  <!-- Подключаем основную логику -->
+  <script src="./app.js"></script>
+</body>
 </html>
