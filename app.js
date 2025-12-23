@@ -361,6 +361,7 @@ function renderTopBar(activePatient) {
           ${modeLabel}${statusText}
         </div>
       </div>
+    </div>
   `;
 }
 
@@ -487,9 +488,7 @@ function renderFamily(activePatient) {
                   (${escapeHtml(m.relation || "член семьи")})
                 </span>
               </div>
-              <div class="text-xs text-gray-600 mt-0.5">${escapeHtml(
-                fmtMemberMeta(m)
-              )}</div>
+              <div class="text-xs text-gray-600 mt-0.5">${escapeHtml(fmtMemberMeta(m))}</div>
             </div>
             <div class="text-right text-[11px] text-gray-600 space-y-1">
               <div>Анкета: <b>${ank}</b></div>
@@ -502,31 +501,34 @@ function renderFamily(activePatient) {
     })
     .join("");
 
+  const controls =
+    state.mode === "patient"
+      ? `
+        <div class="flex gap-2">
+          <button data-action="open-add-member"
+            class="px-3 py-2 rounded-2xl bg-gray-900 text-white text-xs active:scale-95 transition">
+            + Добавить
+          </button>
+          <button data-action="delete-account"
+            class="px-3 py-2 rounded-2xl bg-red-50 text-red-700 text-xs active:scale-95 transition">
+            Удалить аккаунт
+          </button>
+        </div>
+      `
+      : "";
+
   return `
     <div class="p-4 space-y-4">
       <div class="bg-white rounded-2xl border border-gray-200 p-4">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-3">
           <div>
             <div class="font-semibold text-gray-900">Профиль пациента</div>
-            <div class="text-sm text-gray-600">
-              Внутри — члены семьи и их анкеты
-            </div>
+            <div class="text-sm text-gray-600">Внутри — члены семьи и их анкеты</div>
           </div>
-          ${state.mode !== "doctor" ? `
-  ${state.mode !== "doctor" ? `
-  <button data-action="open-add-member"
-    class="px-3 py-2 rounded-2xl bg-gray-900 text-white text-xs active:scale-95 transition">
-    + Добавить
-  </button>
-` : ""}
-          ${state.mode !== "doctor" ? `
-  <button data-action="delete-account"
-    class="px-3 py-2 rounded-2xl bg-red-50 text-red-700 text-xs active:scale-95 transition">
-    Удалить аккаунт
-  </button>
-` : ""}
+          ${controls}
         </div>
       </div>
+
       <div class="space-y-3">
         ${membersHtml}
       </div>
@@ -735,6 +737,28 @@ function renderMemberConsult(activePatient, member) {
   const baseUrgent = `URGENT • ${phone} • ${member.name}`;
   const basePrev = `PREV • ${phone} • ${member.name}`;
 
+  function actionsBlock(text, type) {
+    if (!isPatient) {
+      return `
+        <div class="mt-3 text-xs text-gray-500">
+          В режиме врача здесь только просмотр. Подтверждение оплаты — в разделе «Заявки на оплату».
+        </div>
+      `;
+    }
+    return `
+      <div class="mt-3 grid grid-cols-2 gap-2">
+        <button data-action="copy-text" data-text="${escapeAttr(text)}"
+          class="px-3 py-2 rounded-2xl bg-gray-100 text-sm active:scale-95 transition">
+          Скопировать
+        </button>
+        <button data-action="consult-pay" data-type="${type}"
+          class="px-3 py-2 rounded-2xl bg-gray-900 text-white text-sm active:scale-95 transition">
+          Оплачено
+        </button>
+      </div>
+    `;
+  }
+
   return `
     <div class="space-y-3">
       <div class="bg-white rounded-2xl border border-gray-200 p-4 text-sm">
@@ -747,12 +771,16 @@ function renderMemberConsult(activePatient, member) {
             Статус: <b>${statusLabel(urgentStatus)}</b>
           </div>
         </div>
+
         <div class="mt-3 text-sm text-gray-700">
           Перевод на номер: <b>+7 (999) 000-00-00</b>
         </div>
         <div class="text-xs text-gray-600 mt-1">
           Комментарий: <b>${escapeHtml(baseUrgent)}</b>
         </div>
+
+        ${actionsBlock(baseUrgent, "urgent")}
+      </div>
 
       <div class="bg-white rounded-2xl border border-gray-200 p-4 text-sm">
         <div class="flex items-start justify-between gap-3">
@@ -764,63 +792,15 @@ function renderMemberConsult(activePatient, member) {
             Статус: <b>${statusLabel(prevStatus)}</b>
           </div>
         </div>
+
         <div class="mt-3 text-sm text-gray-700">
           Перевод на номер: <b>+7 (999) 000-00-00</b>
         </div>
         <div class="text-xs text-gray-600 mt-1">
           Комментарий: <b>${escapeHtml(basePrev)}</b>
         </div>
-                ${
-          isPatient
-            ? `
-                ${
-          isPatient
-            ? `
-                ${
-          state.mode === "patient"
-            ? `
-                      ${
-          state.mode === "patient"
-            ? `
-              <div class="mt-3 grid grid-cols-2 gap-2">
-                <button data-action="copy-text" data-text="${escapeAttr(basePrev)}"
-                  class="px-3 py-2 rounded-2xl bg-gray-100 text-sm active:scale-95 transition">
-                  Скопировать
-                </button>
-                <button data-action="consult-pay" data-type="prev"
-                  class="px-3 py-2 rounded-2xl bg-gray-900 text-white text-sm active:scale-95 transition">
-                  Оплачено
-                </button>
-              </div>
-            `
-            : `
-              <div class="mt-3 text-xs text-gray-500">
-                В режиме врача здесь только просмотр. Подтверждение оплаты — в разделе «Заявки на оплату».
-              </div>
-            `
-        }
-            `
-            : `
-              <div class="mt-3 text-xs text-gray-500">
-                В режиме врача здесь только просмотр. Подтверждение оплаты — в разделе «Заявки на оплату».
-              </div>
-            `
-        }
-            `
-            : `
-        <div class="mt-3 text-xs text-gray-500">
-          Оплата отмечается пациентом. Врач подтверждает заявки в кабинете врача.
-        </div>
-            `
-        }
 
-            `
-            : `
-        <div class="mt-3 text-xs text-gray-500">
-          Оплата отмечается пациентом. Врач подтверждает заявки в кабинете врача.
-        </div>
-            `
-        }
+        ${actionsBlock(basePrev, "prev")}
       </div>
     </div>
   `;
@@ -1083,7 +1063,7 @@ function renderBottomNav() {
 
 function renderModals(activePatient, member) {
   let html = "";
-  if (state.uiRegisterOpen) {
+  if (state.uiRegisterOpen && state.mode === "patient") {
   html += `
     <div class="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black bg-opacity-40">
       <div class="bg-white rounded-3xl w-full max-w-md mx-4 mb-4 sm:mb-0 p-4 space-y-3">
@@ -1120,7 +1100,7 @@ function renderModals(activePatient, member) {
   `;
 }
   
-  if (state.uiAddMemberOpen) {
+  if (state.uiAddMemberOpen && state.mode === "patient") {
     html += `
       <div class="fixed inset-0 z-40 flex items-end sm:items-center justify-center bg-black bg-opacity-40">
         <div class="bg-white rounded-3xl w-full max-w-md mx-4 mb-4 sm:mb-0 p-4 space-y-3">
@@ -1177,7 +1157,7 @@ function renderModals(activePatient, member) {
     `;
   }
 
-  if (state.uiAnketaOpen && member) {
+  if (state.uiAnketaOpen && member && state.mode === "patient") {
     const goal = member.anketa?.goal || "";
     const comp = member.anketa?.complaints || "";
     html += `
@@ -1295,10 +1275,6 @@ function handleSaveAddMember() {
     return;
   }
 
-    if (state.mode === "doctor") {
-    showToast("Добавление доступно только пациенту");
-    return;
-  }
   const relationEl = document.getElementById("addRelation");
   const nameEl = document.getElementById("addName");
   const dobEl = document.getElementById("addDob");
@@ -1687,12 +1663,12 @@ if (page === "family" && state.mode !== "doctor" && !getActivePatient()) {
       render();
       break;
     }
-    case "open-add-member":
+   case "open-add-member":
   if (state.mode !== "patient") { showToast("Только пациент"); break; }
   state.uiAddMemberOpen = true;
   render();
   break;
-  }
+
   state.uiAddMemberOpen = true;
   render();
   break;
@@ -1723,7 +1699,6 @@ if (page === "family" && state.mode !== "doctor" && !getActivePatient()) {
   state.uiAnketaOpen = true;
   render();
   break;
-  }
   state.uiAnketaOpen = true;
   render();
   break;
